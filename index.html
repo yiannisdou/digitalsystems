@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Προσομοιώσεις ψηφιακών συστημάτων</title>
+<style>
+  :root{--bg:#f4f6f9;--card:#ffffff;--ink:#1d2433;--muted:#5b6475;--line:#d5dbe5;--hov:#f7fbfa;--acc:#0f7b6c}
+  body.dark{--bg:#0d1219;--card:#161e2b;--ink:#e6ebf2;--muted:#9aa6b8;--line:#2c3a4f;--hov:#1c2a3b;--acc:#3d9bff}
+  body{margin:0;font-family:Calibri,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:900px;margin:0 auto;padding:24px 16px 40px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  h1{font-size:1.7rem;margin:0 0 6px}
+  p{color:var(--muted);margin:0 0 20px;line-height:1.45}
+  button{font:inherit;font-size:1rem;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;white-space:nowrap}
+  button:hover{background:var(--hov)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+  a.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;text-decoration:none;color:inherit}
+  a.card:hover{border-color:var(--acc);background:var(--hov)}
+  .n{font-size:1.3rem;font-weight:700}
+  .eq{font-size:1.05rem;margin:6px 0 4px}
+  .c{font-size:.92rem;color:var(--muted)}
+  .ov{text-decoration:overline}
+  h2{font-size:1.25rem;margin:8px 0 12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h1>Προσομοιώσεις ψηφιακών συστημάτων</h1>
+    <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
+  </div>
+  <p>Διαδραστικές προσομοιώσεις κυκλωμάτων με μπουτόν στις εισόδους, LED στις εξόδους, καθυστέρηση πύλης σε αργή κίνηση και χρονοδιάγραμμα. Τεχνολογία CMOS (74HC).</p>
+  <h2>Μανταλωτές (μνήμη 1 bit)</h2>
+  <div class="grid">
+    <a class="card" href="sr_latch_nor.html"><div class="n">S-R με NOR</div><div class="eq">είσοδοι ενεργές στο 1</div><div class="c">74HC02</div></a>
+    <a class="card" href="sr_latch_nand.html"><div class="n">S-R με NAND</div><div class="eq">είσοδοι ενεργές στο 0</div><div class="c">74HC00</div></a>
+  </div>
+</div>
+<script>
+(function(){
+  var dark = false, bt = document.getElementById('btnTheme');
+  var links = document.querySelectorAll('a.card');
+  function setTheme(d){
+    dark = d;
+    document.body.classList.toggle('dark', d);
+    bt.textContent = d ? '☀️ Φωτεινό θέμα' : '🌙 Σκούρο θέμα';
+    bt.setAttribute('aria-pressed', d ? 'true' : 'false');
+    try { localStorage.setItem('gateSimTheme', d ? 'dark' : 'light'); } catch(e){}
+    // οι προσομοιώσεις ανοίγουν με το ίδιο θέμα
+    for (var i = 0; i < links.length; i++){
+      links[i].href = links[i].getAttribute('href').split('#')[0] + (d ? '#dark' : '#light');
+    }
+  }
+  bt.addEventListener('click', function(){ setTheme(!dark); });
+  var h = (location.hash || '').toLowerCase(), saved = null;
+  try { saved = localStorage.getItem('gateSimTheme'); } catch(e){}
+  if (h === '#dark') setTheme(true);
+  else if (h === '#light') setTheme(false);
+  else setTheme(saved === 'dark');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Προσομοίωση: Flip-flop D με σκανδάλιση στο ανερχόμενο μέτωπο</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1d2433; --muted:#5b6475;
+    --line:#d5dbe5; --hi:#e8411f; --accent:#0f7b6c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Calibri,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:960px;margin:0 auto;padding:20px 16px 32px}
+  h1{font-size:1.6rem;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:1rem;line-height:1.4}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  h2{font-size:1.15rem;margin:0 0 10px}
+  svg{width:100%;height:auto;display:block;user-select:none}
+  .sw{cursor:pointer;touch-action:none}
+  .plunger{transition:transform .06s}
+  button.push{touch-action:none;user-select:none;-webkit-user-select:none}
+  .sw:focus{outline:none}
+  .sw:focus-visible .hit{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+  .sw:hover .hit{fill:rgba(15,123,108,.06)}
+  .comp{stroke:#1d2433;fill:none;stroke-width:3;stroke-linejoin:round}
+  .wire{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;transition:stroke .12s}
+  #clkTri{transition:fill .2s}
+  #clkTri.edge{fill:#1e7bff}
+  #edgeMark{transition:opacity .5s}
+  select{font:inherit;font-size:1rem;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+  body.dark select{background:#202c3f}
+  .status2{text-align:center;font-size:1.05rem;margin:4px 0 0;color:var(--muted);min-height:1.4em}
+  .status2 b{color:var(--ink)}
+  .ltag{font-size:20px;font-weight:700}
+  .vtag{font-size:16px;font-weight:700}
+  .itag{font-size:15px;font-weight:700;fill:#1d4ed8}
+  .lbl{font-size:15px;fill:#1d2433}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+  button{font:inherit;font-size:1rem;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  button:hover{background:#f0f3f8}
+  button.on{background:#e7f4f1;border-color:var(--accent)}
+  button .v{font-weight:700;margin-left:6px}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:1rem;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:700px){.grid{grid-template-columns:1fr}}
+  table{border-collapse:collapse;width:100%;font-size:1.05rem;text-align:center}
+  th,td{border:1px solid var(--line);padding:7px}
+  th{background:#eef2f7}
+  tr.active td{background:#fff3c4;font-weight:700}
+  tr.active.bad td{background:#ffe1dc;color:#a8260c}
+  .eq{font-size:1.2rem;text-align:center;margin:4px 0 12px}
+  .note{color:var(--muted);font-size:.97rem;line-height:1.45;margin:0 0 8px}
+  .ov{text-decoration:overline}
+  .ovb{border-top:1.5px solid currentColor;padding-top:3px;display:inline-block;line-height:1.1}
+  .note b{color:var(--ink)}
+  .status{text-align:center;font-size:1.15rem;margin:8px 0 0;min-height:1.5em}
+  .status .on{color:var(--hi);font-weight:700}
+  .status .warn{color:#c2410c;font-weight:700}
+  .status .mem{color:var(--accent);font-weight:700}
+  kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:#fff;font-size:.9em}
+  canvas{width:100%;height:260px;display:block;border:1px solid var(--line);border-radius:8px;background:#fcfdfe}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  #btnTheme{white-space:nowrap}
+  .back{display:inline-block;margin:0 0 10px;color:var(--muted);text-decoration:none;font-size:1rem}
+  .back:hover{color:var(--ink);text-decoration:underline}
+  body.embedded .back{display:none}
+  .legend{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+  ol.explore{margin:0;padding-left:22px;color:var(--muted);line-height:1.5}
+  ol.explore li{margin-bottom:6px}
+  ol.explore b{color:var(--ink)}
+
+  /* ---------- Σκούρο θέμα ---------- */
+  body.dark{--bg:#0d1219;--card:#161e2b;--ink:#e6ebf2;--muted:#9aa6b8;--line:#2c3a4f}
+  body.dark button{background:#202c3f;color:var(--ink)}
+  body.dark button:hover{background:#2a3a55}
+  body.dark button.on{background:#123a33;border-color:#2fc4a8}
+  body.dark th{background:#202c3f}
+  body.dark tr.active td{background:#4a3b10;color:#ffe08a}
+  body.dark tr.active.bad td{background:#4a1f17;color:#ffb4a2}
+  body.dark kbd{background:#202c3f}
+  body.dark canvas{background:#101824}
+  body.dark .status .warn{color:#ff9b6b}
+  body.dark .status .mem{color:#2fc4a8}
+  svg use{color:#1d2433}
+  body.dark svg use{color:#e6ebf2}
+  body.dark .comp{stroke:#e6ebf2}
+  body.dark .lbl{fill:#e6ebf2}
+  body.dark .itag{fill:#6cb4ff}
+  body.dark #clkTri.edge{fill:#3d9bff}
+  body.dark svg [fill="#1d2433"]{fill:#e6ebf2}
+  body.dark svg [stroke="#1d2433"]{stroke:#e6ebf2}
+  body.dark svg [fill="#5b6475"]{fill:#9aa6b8}
+  body.dark svg [fill="#fdfdfd"],
+  body.dark svg [fill="#fff"]{fill:#161e2b}
+  body.dark svg [fill="#f2d4cc"]{fill:#4a2a24}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a id="backLink" class="back" href="index.html">← Όλες οι προσομοιώσεις</a>
+  <div class="head">
+    <h1>Flip-flop D με σκανδάλιση στο ανερχόμενο μέτωπο</h1>
+    <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
+  </div>
+  <p class="sub">Κάνε κλικ στον διακόπτη <b>SW1</b> (D) ή πάτησε <kbd>D</kbd> για να ορίσεις την είσοδο. Το ρολόι <b>CLK</b> είναι αυτόματο: με τον ρυθμιστή αλλάζεις τη συχνότητά του. Παρατήρησε <b>πότε</b> και <b>ποια τιμή</b> παίρνει η έξοδος Q.</p>
+
+  <div class="card" id="circuitCard">
+    <svg viewBox="0 0 840 440" role="img" aria-label="Flip-flop D με διακόπτες εισόδου, γεννήτρια ρολογιού, αντιστάσεις pull-down 10 kΩ και LED στις εξόδους Q και Q αρνημένο με αντιστάσεις 220 Ω">
+      <defs>
+        <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff5a2a" stop-opacity=".8"/>
+          <stop offset="60%" stop-color="#ff5a2a" stop-opacity=".22"/>
+          <stop offset="100%" stop-color="#ff5a2a" stop-opacity="0"/>
+        </radialGradient>
+        <marker id="arr" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#e8411f"/>
+        </marker>
+        <g id="gnd">
+          <line x1="-20" y1="0" x2="20" y2="0" stroke="currentColor" stroke-width="3"/>
+          <line x1="-13" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="3"/>
+          <line x1="-6" y1="14" x2="6" y2="14" stroke="currentColor" stroke-width="3"/>
+        </g>
+      </defs>
+      <!-- ========== ΕΙΣΟΔΟΙ ========== -->
+      <text x="18" y="119" font-size="28" font-weight="700" text-anchor="start" fill="#1d2433" >D</text>
+      <text x="62" y="92" font-size="15" font-weight="700" text-anchor="middle" fill="#e8411f">+5 V</text>
+      <polyline class="wire" id="wD_src" points="62,110 100,110"/>
+      <circle cx="62" cy="110" r="5" fill="#fff" stroke="#e8411f" stroke-width="3"/>
+      <polyline class="wire" id="wD_node" points="150,110 420,110"/>
+      <circle cx="220" cy="110" r="6" fill="#1d2433"/>
+      <text class="ltag" id="lD" x="410" y="100" text-anchor="end">0</text>
+      <polyline class="wire" id="wD_pd" points="220,110 220,125"/>
+      <polyline class="comp" points="220,125 231,130 209,140 231,150 209,160 231,170 220,175"/>
+      <polyline class="wire" id="wD_gnd" points="220,175 220,190"/>
+      <use href="#gnd" x="220" y="190"/>
+      <text class="lbl" x="240" y="150">R1</text><text class="lbl" x="240" y="167">10 kΩ</text>
+      <text class="lbl" x="125" y="142" text-anchor="middle">SW1</text>
+      <g id="swD" class="sw tog" tabindex="0" role="switch" aria-label="Διακόπτης SW1, είσοδος D">
+        <rect class="hit" x="84" y="68" width="84" height="62" rx="8" fill="transparent" stroke="none"/>
+        <line class="lever" x1="100" y1="110" x2="145" y2="85" stroke="#e8411f" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="100" cy="110" r="5" fill="#fff" stroke="#1d2433" stroke-width="2.5"/>
+        <circle cx="150" cy="110" r="5" fill="#fff" stroke="#1d2433" stroke-width="2.5"/>
+      </g>
+      <text x="100" y="288" font-size="20" font-weight="700" text-anchor="middle" fill="#1d2433">CLK</text>
+      <polyline class="wire" id="wC_node" points="130,330 420,330"/>
+      <polyline class="wire" id="wC_gnd" points="100,360 100,378"/>
+      <use href="#gnd" x="100" y="378"/>
+      <circle id="clkGen" cx="100" cy="330" r="30" fill="#fdfdfd" stroke="#1d2433" stroke-width="3"/>
+      <path d="M80,339 h7 v-18 h13 v18 h13 v-18 h7" fill="none" stroke="#1d2433" stroke-width="2.5" stroke-linejoin="round"/>
+      <text class="lbl" id="clkFreqTxt" x="150" y="320">0,5 Hz</text>
+      <text class="ltag" id="lC" x="394" y="320" text-anchor="end">0</text>
+      <!-- ========== FLIP-FLOP ========== -->
+      <rect id="ffBody" x="420" y="70" width="140" height="300" rx="4" fill="#fdfdfd" stroke="#1d2433" stroke-width="4"/>
+      <text x="490.0" y="58" font-size="15" font-weight="700" text-anchor="middle" fill="#1d2433">Flip-flop D</text>
+      <text x="500.0" y="228.0" font-size="22" font-weight="700" text-anchor="middle" fill="#5b6475">FF D</text>
+      <text x="432" y="118" font-size="22" font-weight="700" text-anchor="start" fill="#1d2433" >D</text>
+      <path id="clkTri" d="M420,316 L440,330 L420,344" fill="#fdfdfd" stroke="#1d2433" stroke-width="3" stroke-linejoin="round"/>
+      <text x="448" y="336" font-size="16" font-weight="700" fill="#1d2433">CLK</text>
+      <text id="edgeMark" x="490.0" y="292" font-size="34" font-weight="700" text-anchor="middle" fill="#1e7bff" opacity="0">↑</text>
+      <text x="548" y="118" font-size="22" font-weight="700" text-anchor="end" fill="#1d2433" >Q</text>
+      <text x="548" y="338" font-size="22" font-weight="700" text-anchor="end" fill="#1d2433" >Q</text><line x1="535.4" y1="320.4" x2="547.0" y2="320.4" stroke="#1d2433" stroke-width="1.8"/>
+      <text x="490.0" y="392" font-size="14" text-anchor="middle" fill="#5b6475">π.χ. 74HC74</text>
+      <!-- ========== ΕΞΟΔΟΙ ========== -->
+      <polyline class="wire" id="wQ" points="560,110 600,110"/>
+      <polyline class="comp" points="600,110 605,99 615,121 625,99 635,121 645,99 655,121 665,99 680,110"/>
+      <text class="lbl" x="640" y="142" text-anchor="middle">R2  220 Ω</text>
+      <polyline class="wire" id="wQ_led" points="680,110 760,110 760,140"/>
+      <circle id="haloQ" cx="760" cy="158" r="0" fill="url(#glow)"/>
+      <path id="ledQ" d="M740,140 L780,140 L760,174 Z" fill="#f2d4cc" stroke="#1d2433" stroke-width="3" stroke-linejoin="round"/>
+      <line x1="740" y1="175" x2="780" y2="175" stroke="#1d2433" stroke-width="3"/>
+      <g id="raysQ" stroke="#e8411f" stroke-width="2.5" opacity="0">
+        <line x1="786" y1="146" x2="808" y2="132" marker-end="url(#arr)"/>
+        <line x1="788" y1="160" x2="812" y2="148" marker-end="url(#arr)"/></g>
+      <text class="lbl" x="700" y="192" text-anchor="end">LED1</text>
+      <text class="itag" id="iQ" x="772" y="202"></text>
+      <polyline class="wire" id="wQ_gnd" points="760,175 760,205"/>
+      <use href="#gnd" x="760" y="205"/>
+      <text class="ltag" id="lQ" x="572" y="100">0</text>
+      <polyline class="wire" id="wQn" points="560,330 600,330"/>
+      <polyline class="comp" points="600,330 605,319 615,341 625,319 635,341 645,319 655,341 665,319 680,330"/>
+      <text class="lbl" x="640" y="362" text-anchor="middle">R3  220 Ω</text>
+      <polyline class="wire" id="wQn_led" points="680,330 760,330 760,360"/>
+      <circle id="haloQn" cx="760" cy="378" r="0" fill="url(#glow)"/>
+      <path id="ledQn" d="M740,360 L780,360 L760,394 Z" fill="#f2d4cc" stroke="#1d2433" stroke-width="3" stroke-linejoin="round"/>
+      <line x1="740" y1="395" x2="780" y2="395" stroke="#1d2433" stroke-width="3"/>
+      <g id="raysQn" stroke="#e8411f" stroke-width="2.5" opacity="0">
+        <line x1="786" y1="366" x2="808" y2="352" marker-end="url(#arr)"/>
+        <line x1="788" y1="380" x2="812" y2="368" marker-end="url(#arr)"/></g>
+      <text class="lbl" x="700" y="412" text-anchor="end">LED2</text>
+      <text class="itag" id="iQn" x="772" y="422"></text>
+      <polyline class="wire" id="wQn_gnd" points="760,395 760,425"/>
+      <use href="#gnd" x="760" y="425"/>
+      <text class="ltag" id="lQn" x="572" y="320">0</text>
+    </svg>
+    <div class="controls">
+      <button id="btnD" type="button">Είσοδος D:<span class="v">0</span></button>
+    </div>
+    <div class="controls">
+      <label class="chk" for="freq">Συχνότητα ρολογιού
+        <input type="range" id="freq" min="0.2" max="2" step="0.1" value="0.5" style="width:180px">
+        <b id="freqVal" style="color:var(--ink);min-width:4.2em">0,5 Hz</b>
+      </label>
+      <button id="btnAutoClk" type="button">⏸ Σταμάτημα ρολογιού</button>
+    </div>
+    <p class="status" id="status"></p>
+    <p class="status2" id="status2"></p>
+  </div>
+
+  <div class="card">
+    <div class="legend">
+      <h2 style="margin:0">Χρονοδιάγραμμα (τελευταία 10 s)</h2>
+      <div class="controls" style="margin:0">
+        <button id="btnPause" type="button">⏸ Παύση</button>
+        <button id="btnClear" type="button">Καθαρισμός</button>
+      </div>
+    </div>
+    <canvas id="timing" aria-label="Χρονοδιάγραμμα του ρολογιού, των εισόδων και της εξόδου Q"></canvas>
+    <p class="note" style="margin-top:8px">Οι <b>διακεκομμένες γραμμές</b> δείχνουν τα <b>ανερχόμενα μέτωπα</b> του ρολογιού (CLK από 0 σε 1): μόνο τότε μπορεί να αλλάξει η έξοδος Q.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Πίνακας αληθείας</h2>
+      <div class="eq">Q<sub>n+1</sub> = D</div>
+      <table id="tt">
+        <thead><tr><th>D</th><th>Q<sub>n+1</sub></th><th>Λειτουργία</th></tr></thead>
+        <tbody>
+          <tr data-r="0"><td>0</td><td>0</td><td>Μηδενισμός (Reset)</td></tr>
+          <tr data-r="1"><td>1</td><td>1</td><td>Θέση (Set)</td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="margin-top:8px">Q<sub>n</sub>: η έξοδος πριν από το ανερχόμενο μέτωπο · Q<sub>n+1</sub>: η έξοδος μετά το μέτωπο. Τονίζεται η γραμμή που θα εφαρμοστεί στο επόμενο μέτωπο.</p>
+    </div>
+    <div class="card">
+      <h2>Πώς λειτουργεί</h2>
+      <p class="note">Το flip-flop D (Data ή Delay) έχει μία μόνο είσοδο δεδομένων. Στο <b>ανερχόμενο μέτωπο</b> του ρολογιού η έξοδος Q παίρνει την τιμή που έχει εκείνη τη στιγμή η είσοδος D, και την κρατά μέχρι το επόμενο μέτωπο.</p>
+      <p class="note">Επειδή υπάρχει μόνο μία είσοδος, δεν υπάρχει μη χρησιμοποιούμενη κατάσταση. Γι' αυτό είναι το πιο συνηθισμένο flip-flop: με αυτό φτιάχνονται οι <b>καταχωρητές</b> και οι μνήμες που αποθηκεύουν δεδομένα.</p>
+      <p class="note">Στην πράξη υπάρχει έτοιμο σε ολοκληρωμένο, π.χ. το <b>74HC74</b> (δύο flip-flop D με σκανδάλιση στο ανερχόμενο μέτωπο, με επιπλέον εισόδους PRE και CLR).</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Διερεύνηση</h2>
+    <ol class="explore">
+        <li>Βάλε τη συχνότητα στα 0,2 Hz και άλλαξε το D αρκετές φορές ανάμεσα σε δύο μέτωπα. Αλλάζει το Q κάθε φορά που αλλάζει το D;</li>
+        <li>Άλλαξε το D όσο το CLK είναι 1. Πότε «περνά» η νέα τιμή στην έξοδο; Δες το χρονοδιάγραμμα.</li>
+        <li>Γιατί λέμε ότι το flip-flop D «αποθηκεύει» ένα bit; Γιατί το λένε και flip-flop καθυστέρησης (Delay);</li>
+        <li>Πόσα flip-flop D θα χρειαζόσουν για να αποθηκεύσεις έναν αριθμό των 4 bit; Πώς θα συνέδεες τα ρολόγια τους;</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+(function(){
+  var CFG = {"type": "d", "inputs": ["D"]};
+  var IN = CFG.inputs, TWO = IN.length === 2;
+  var VCC = 5, R_LED = 220, VF = 2.0;
+  var Y_IN = {}; Y_IN[IN[0]] = 110; if (TWO) Y_IN[IN[1]] = 330;
+  var st = {}; IN.forEach(function(k){ st[k] = 0; });
+  var clk = 0, q = 0, dark = false;
+  var lastMsg = '', warnMsg = '', warnTimer = null;
+  var QN = '<span class="ov">Q</span>';
+
+  function $(id){ return document.getElementById(id); }
+  function fmtV(v){ return v.toFixed(1).replace('.', ',') + ' V'; }
+  function fmtI(a){ return (a*1000).toFixed(1).replace('.', ',') + ' mA'; }
+  function vColor(v){
+    var t = Math.max(0, Math.min(1, v / VCC)), c0 = [138,148,166], c1 = [232,65,31];
+    return 'rgb(' + Math.round(c0[0]+(c1[0]-c0[0])*t) + ',' + Math.round(c0[1]+(c1[1]-c0[1])*t) + ',' + Math.round(c0[2]+(c1[2]-c0[2])*t) + ')';
+  }
+  function wire(id, v){ var e = $(id); if (e) e.setAttribute('stroke', vColor(v)); }
+  function ltag(id, b){ var t = $(id); t.textContent = b; t.setAttribute('fill', b ? '#e8411f' : '#8a94a6'); }
+  function vtag(id, v){ var t = $(id); t.textContent = fmtV(v); t.setAttribute('fill', v >= 1 ? vColor(Math.max(v, 2.5)) : '#5b6475'); }
+
+  /* ---------- λογική flip-flop ---------- */
+  function a(){ return st[IN[0]]; }
+  function b(){ return TWO ? st[IN[1]] : 0; }
+  function next(){
+    switch (CFG.type){
+      case 'sr': return a() ? 1 : (b() ? 0 : q);
+      case 'd':  return a();
+      case 'jk': return (a() && b()) ? 1 - q : (a() ? 1 : (b() ? 0 : q));
+      case 't':  return a() ? 1 - q : q;
+    }
+  }
+  function mode(){
+    switch (CFG.type){
+      case 'd': return a() ? 'Θέση (Set)' : 'Μηδενισμός (Reset)';
+      case 't': return a() ? 'Εναλλαγή (Toggle)' : 'Αμετάβλητη';
+      default:
+        if (a() && b()) return 'Εναλλαγή (Toggle)';
+        if (a()) return 'Θέση (Set)';
+        if (b()) return 'Μηδενισμός (Reset)';
+        return 'Αμετάβλητη';
+    }
+  }
+  function insTxt(){ return IN.map(function(k){ return k + ' = ' + st[k]; }).join(', '); }
+
+  /* ---------- απεικόνιση ---------- */
+  function led(o, on){
+    $('led' + o).setAttribute('fill', on ? '#ff4b1f' : '#f2d4cc');
+    $('halo' + o).setAttribute('r', on ? 60 : 0);
+    $('rays' + o).setAttribute('opacity', on ? 1 : 0);
+    $('i' + o).textContent = on ? '↓ ' + fmtI((VCC - VF) / R_LED) : '';
+  }
+  function render(){
+    IN.forEach(function(k){
+      var v = st[k] * VCC, y = Y_IN[k], lever = $('sw' + k).querySelector('.lever');
+      lever.setAttribute('x2', st[k] ? 150 : 145); lever.setAttribute('y2', st[k] ? y : y - 25);
+      $('sw' + k).setAttribute('aria-checked', st[k] ? 'true' : 'false');
+      wire('w' + k + '_src', VCC); wire('w' + k + '_node', v); wire('w' + k + '_pd', v); wire('w' + k + '_gnd', 0);
+      ltag('l' + k, st[k]);
+      document.querySelector('#btn' + k + ' .v').textContent = st[k];
+      $('btn' + k).classList.toggle('on', !!st[k]);
+    });
+    wire('wC_node', clk * VCC); wire('wC_gnd', 0); ltag('lC', clk);
+
+    var qn = 1 - q;
+    wire('wQ', q * VCC); wire('wQ_led', q ? VF : 0); wire('wQ_gnd', 0);
+    wire('wQn', qn * VCC); wire('wQn_led', qn ? VF : 0); wire('wQn_gnd', 0);
+    ltag('lQ', q); ltag('lQn', qn);
+    led('Q', q); led('Qn', qn);
+
+    var key = IN.map(function(k){ return st[k]; }).join('');
+    var rows = document.querySelectorAll('#tt tbody tr');
+    for (var i = 0; i < rows.length; i++){
+      rows[i].className = rows[i].getAttribute('data-r') === key ? 'active' : '';
+    }
+    $('status').innerHTML = insTxt() + ', CLK = ' + clk + ' &mdash; Q = <b>' + q + '</b>, ' + QN + ' = <b>' + qn + '</b>';
+    $('status2').innerHTML = warnMsg ? '<span class="warn" style="color:#c2410c;font-weight:700">' + warnMsg + '</span>'
+      : (lastMsg || 'Δεν έχει δοθεί ακόμα ανερχόμενο μέτωπο ρολογιού.');
+  }
+  function warn(msg){
+    warnMsg = msg; render();
+    clearTimeout(warnTimer);
+    warnTimer = setTimeout(function(){ warnMsg = ''; render(); }, 3000);
+  }
+
+  var edgeTimer = null;
+  function flashEdge(){
+    $('clkTri').classList.add('edge'); $('edgeMark').setAttribute('opacity', 1);
+    clearTimeout(edgeTimer);
+    edgeTimer = setTimeout(function(){ $('clkTri').classList.remove('edge'); $('edgeMark').setAttribute('opacity', 0); }, 350);
+  }
+
+  function setClk(v){
+    if (v === clk) return;
+    clk = v;
+    if (clk === 1){                       // ανερχόμενο μέτωπο
+      var old = q, m = mode();
+      q = next();
+      lastMsg = '<b>↑ Ανερχόμενο μέτωπο:</b> ' + insTxt() + ' &rarr; <b>' + m + '</b>: Q ' + old + ' &rarr; <b>' + q + '</b>';
+      flashEdge(); record(true);
+    } else record(false);
+    render();
+  }
+
+  /* ---------- χρονοδιάγραμμα ---------- */
+  var WINDOW = 10000, events = [], paused = false, pausedAt = 0;
+  function now(){ return performance.now(); }
+  function record(edge){
+    var e = {t: now(), C: clk, Q: q, edge: !!edge};
+    IN.forEach(function(k){ e[k] = st[k]; });
+    events.push(e);
+  }
+  var cv = $('timing'), ctx = cv.getContext('2d');
+  function resize(){
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(cv.clientWidth * dpr); cv.height = Math.round(cv.clientHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  function drawTiming(){
+    var w = cv.clientWidth, h = cv.clientHeight;
+    var tNow = paused ? pausedAt : now(), t0 = tNow - WINDOW;
+    var left = 44, right = 12, top = 12, bottom = 26, pw = w - left - right;
+    var traces = [{n:'CLK', f:'C'}].concat(IN.map(function(k){ return {n:k, f:k}; })).concat([{n:'Q', f:'Q'}]);
+    var rowH = (h - top - bottom) / traces.length;
+    function X(t){ return left + (t - t0) / WINDOW * pw; }
+    ctx.clearRect(0, 0, w, h);
+    var P = dark ? {grid:'#253246', sep:'#2c3a4f', txt:'#9aa6b8', edge:'#3d9bff', cols:['#c58cff','#5b9bff','#2fc4a8','#ff6a3d']}
+                 : {grid:'#e6eaf0', sep:'#d5dbe5', txt:'#5b6475', edge:'#1e7bff', cols:['#7c3aed','#2f6fd6','#0f7b6c','#e8411f']};
+    ctx.font = '13px Calibri, "Segoe UI", Arial, sans-serif';
+    ctx.strokeStyle = P.grid; ctx.lineWidth = 1; ctx.fillStyle = P.txt; ctx.textAlign = 'center';
+    for (var s = 0; s <= 10; s++){
+      var x = left + s / 10 * pw;
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, h - bottom); ctx.stroke();
+      ctx.fillText((s - 10) + ' s', x, h - 8);
+    }
+    while (events.length > 1 && events[1].t <= t0) events.shift();
+    // ανερχόμενα μέτωπα
+    ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = P.edge; ctx.lineWidth = 1.3;
+    events.forEach(function(e){
+      if (!e.edge || e.t < t0) return;
+      ctx.beginPath(); ctx.moveTo(X(e.t), top); ctx.lineTo(X(e.t), h - bottom); ctx.stroke();
+    });
+    ctx.restore();
+    traces.forEach(function(tr, i){
+      var yHi = top + i * rowH + rowH * 0.18, yLo = top + i * rowH + rowH * 0.82;
+      var col = tr.f === 'Q' ? P.cols[3] : (tr.f === 'C' ? P.cols[0] : P.cols[i]);
+      ctx.fillStyle = col; ctx.textAlign = 'left';
+      ctx.font = 'bold ' + (tr.n.length > 1 ? 13 : 16) + 'px Calibri, "Segoe UI", Arial, sans-serif';
+      ctx.fillText(tr.n, 4, (yHi + yLo) / 2 + 5);
+      ctx.font = '11px Calibri, "Segoe UI", Arial, sans-serif'; ctx.fillStyle = '#8a94a6';
+      ctx.fillText('1', 32, yHi + 4); ctx.fillText('0', 32, yLo + 4);
+      if (i > 0){ ctx.strokeStyle = P.sep; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(left, top + i * rowH); ctx.lineTo(w - right, top + i * rowH); ctx.stroke(); }
+      if (!events.length) return;
+      ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.lineJoin = 'miter'; ctx.beginPath();
+      var v = events[0][tr.f];
+      ctx.moveTo(X(Math.max(events[0].t, t0)), v ? yHi : yLo);
+      for (var k = 1; k < events.length; k++){
+        var e = events[k]; if (e.t > tNow) break;
+        ctx.lineTo(X(e.t), v ? yHi : yLo); v = e[tr.f]; ctx.lineTo(X(e.t), v ? yHi : yLo);
+      }
+      ctx.lineTo(X(tNow), v ? yHi : yLo); ctx.stroke();
+    });
+    requestAnimationFrame(drawTiming);
+  }
+
+  /* ---------- αλληλεπίδραση ---------- */
+  function toggle(k){
+    if (CFG.type === 'sr' && !st[k]){
+      var other = k === 'S' ? 'R' : 'S';
+      if (st[other]){ warn('⚠ Ο συνδυασμός S = R = 1 δεν χρησιμοποιείται: άνοιξε πρώτα τον διακόπτη ' + other + '.'); return; }
+    }
+    st[k] = 1 - st[k]; record(false); render();
+  }
+  IN.forEach(function(k){
+    var g = $('sw' + k);
+    g.addEventListener('click', function(){ toggle(k); });
+    g.addEventListener('keydown', function(e){ if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); e.stopPropagation(); toggle(k); } });
+    $('btn' + k).addEventListener('click', function(){ toggle(k); });
+  });
+  var GREEK = {'Σ':'S','Ρ':'R','Δ':'D','Ξ':'J','Κ':'K','Τ':'T'};
+  function keyOf(e){ var k = (e.key || '').toUpperCase(); return GREEK[k] || k; }
+  document.addEventListener('keydown', function(e){
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+    var k = keyOf(e);
+    if (IN.indexOf(k) >= 0) toggle(k);
+  });
+
+  /* ---------- αυτόματο ρολόι (γεννήτρια παλμών) ---------- */
+  var autoClk = null;
+  function freq(){ return parseFloat($('freq').value); }
+  function fmtF(f){ return f.toFixed(1).replace('.', ',').replace(',0', '') + ' Hz'; }
+  function showFreq(){
+    $('freqVal').textContent = fmtF(freq());
+    $('clkFreqTxt').textContent = autoClk ? fmtF(freq()) : 'σταματημένο';
+  }
+  function startAutoClk(){
+    if (autoClk) clearInterval(autoClk);
+    autoClk = setInterval(function(){ setClk(1 - clk); }, 500 / freq());
+    $('btnAutoClk').textContent = '⏸ Σταμάτημα ρολογιού'; $('btnAutoClk').classList.remove('on');
+    showFreq();
+  }
+  function stopAutoClk(){
+    if (autoClk){ clearInterval(autoClk); autoClk = null; }
+    $('btnAutoClk').textContent = '▶ Εκκίνηση ρολογιού'; $('btnAutoClk').classList.add('on');
+    showFreq();
+  }
+  $('btnAutoClk').addEventListener('click', function(){ if (autoClk) stopAutoClk(); else startAutoClk(); });
+  $('freq').addEventListener('input', function(){ if (autoClk) startAutoClk(); else showFreq(); });
+
+  $('btnPause').addEventListener('click', function(){
+    paused = !paused;
+    if (paused){ pausedAt = now(); this.textContent = '▶ Συνέχεια'; this.classList.add('on'); }
+    else { this.textContent = '⏸ Παύση'; this.classList.remove('on'); }
+  });
+  $('btnClear').addEventListener('click', function(){ events = []; record(false); });
+
+  /* ---------- θέμα φωτεινό / σκούρο ---------- */
+  function setTheme(d){
+    dark = d;
+    document.body.classList.toggle('dark', d);
+    var bt = $('btnTheme');
+    bt.textContent = d ? '☀️ Φωτεινό θέμα' : '🌙 Σκούρο θέμα';
+    bt.setAttribute('aria-pressed', d ? 'true' : 'false');
+    try { localStorage.setItem('gateSimTheme', d ? 'dark' : 'light'); } catch(e){}
+    $('backLink').href = 'index.html' + (d ? '#dark' : '#light');
+  }
+  try { if (window.self !== window.top) document.body.classList.add('embedded'); }
+  catch(e){ document.body.classList.add('embedded'); }
+  $('btnTheme').addEventListener('click', function(){ setTheme(!dark); });
+  (function(){
+    var h = (location.hash || '').toLowerCase(), saved = null;
+    try { saved = localStorage.getItem('gateSimTheme'); } catch(e){}
+    if (h === '#dark') setTheme(true); else if (h === '#light') setTheme(false); else setTheme(saved === 'dark');
+  })();
+
+  record(false); render(); resize();
+  startAutoClk();
+  requestAnimationFrame(drawTiming);
+})();
+</script>
+</body>
+</html>

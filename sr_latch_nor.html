@@ -17,7 +17,9 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
   h2{font-size:1.15rem;margin:0 0 10px}
   svg{width:100%;height:auto;display:block;user-select:none}
-  .sw{cursor:pointer}
+  .sw{cursor:pointer;touch-action:none}
+  .plunger{transition:transform .06s}
+  button.push{touch-action:none;user-select:none;-webkit-user-select:none}
   .sw:focus{outline:none}
   .sw:focus-visible .hit{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
   .sw:hover .hit{fill:rgba(15,123,108,.06)}
@@ -95,7 +97,7 @@
     <h1>Μανταλωτής S-R με πύλες NOR</h1>
     <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
   </div>
-  <p class="sub">Κάνε κλικ στους διακόπτες <b>SW1</b> (είσοδος S) και <b>SW2</b> (είσοδος R) ή πάτησε τα πλήκτρα <kbd>S</kbd> και <kbd>R</kbd>. Με κλειστό διακόπτη η είσοδος γίνεται <b>1</b>. Παρατήρησε τι κάνουν οι έξοδοι Q και <span class="ov">Q</span> όταν οι είσοδοι επιστρέφουν στο 0.</p>
+  <p class="sub">Πάτησε και <b>κράτα πατημένο</b> το μπουτόν <b>SW1</b> (είσοδος S) ή <b>SW2</b> (είσοδος R), με το ποντίκι ή με τα πλήκτρα <kbd>S</kbd> και <kbd>R</kbd>. Όσο το μπουτόν είναι πατημένο η είσοδος είναι <b>1</b>· όταν το αφήσεις, η αντίσταση pull-down τη φέρνει ξανά στο 0. Πατιέται <b>ένα μπουτόν τη φορά</b>, οπότε ο μανταλωτής δεν μπαίνει στη μη χρησιμοποιούμενη κατάσταση. Παρατήρησε τι κάνουν οι έξοδοι Q και <span class="ov">Q</span> όταν αφήνεις το μπουτόν.</p>
 
   <div class="card" id="circuitCard">
     <svg viewBox="0 0 840 480" role="img" aria-label="Μανταλωτής με δύο πύλες NOR 74HC02, διακόπτες εισόδου με αντιστάσεις 10 kΩ και LED στις εξόδους Q και Q αρνημένο με αντιστάσεις 220 Ω">
@@ -131,9 +133,13 @@
       <polyline class="wire" id="wR_node" points="150,115 417,115"/>
       <circle cx="220" cy="115" r="6" fill="#1d2433"/>
       <text class="vtag" id="vR" x="232" y="105">0,0 V</text>
-      <g id="swR" class="sw" tabindex="0" role="switch" aria-label="Διακόπτης SW2, είσοδος R">
-        <rect class="hit" x="84" y="73" width="84" height="62" rx="8" fill="transparent" stroke="none"/>
-        <line class="lever" x1="100" y1="115" x2="145" y2="90" stroke="#e8411f" stroke-width="5" stroke-linecap="round"/>
+      <g id="swR" class="sw" tabindex="0" role="button" aria-label="Μπουτόν SW2, είσοδος R: κράτα πατημένο">
+        <rect class="hit" x="84" y="65" width="84" height="70" rx="8" fill="transparent" stroke="none"/>
+        <g class="plunger">
+          <line x1="96" y1="101" x2="154" y2="101" stroke="#e8411f" stroke-width="5" stroke-linecap="round"/>
+          <line x1="125" y1="101" x2="125" y2="81" stroke="#1d2433" stroke-width="3"/>
+          <line x1="113" y1="81" x2="137" y2="81" stroke="#1d2433" stroke-width="3" stroke-linecap="round"/>
+        </g>
         <circle cx="100" cy="115" r="5" fill="#fff" stroke="#1d2433" stroke-width="2.5"/>
         <circle cx="150" cy="115" r="5" fill="#fff" stroke="#1d2433" stroke-width="2.5"/>
       </g>
@@ -150,9 +156,13 @@
       <polyline class="wire" id="wS_node" points="150,365 417,365"/>
       <circle cx="220" cy="365" r="6" fill="#1d2433"/>
       <text class="vtag" id="vS" x="232" y="355">0,0 V</text>
-      <g id="swS" class="sw" tabindex="0" role="switch" aria-label="Διακόπτης SW1, είσοδος S">
-        <rect class="hit" x="84" y="323" width="84" height="62" rx="8" fill="transparent" stroke="none"/>
-        <line class="lever" x1="100" y1="365" x2="145" y2="340" stroke="#e8411f" stroke-width="5" stroke-linecap="round"/>
+      <g id="swS" class="sw" tabindex="0" role="button" aria-label="Μπουτόν SW1, είσοδος S: κράτα πατημένο">
+        <rect class="hit" x="84" y="315" width="84" height="70" rx="8" fill="transparent" stroke="none"/>
+        <g class="plunger">
+          <line x1="96" y1="351" x2="154" y2="351" stroke="#e8411f" stroke-width="5" stroke-linecap="round"/>
+          <line x1="125" y1="351" x2="125" y2="331" stroke="#1d2433" stroke-width="3"/>
+          <line x1="113" y1="331" x2="137" y2="331" stroke="#1d2433" stroke-width="3" stroke-linecap="round"/>
+        </g>
         <circle cx="100" cy="365" r="5" fill="#fff" stroke="#1d2433" stroke-width="2.5"/>
         <circle cx="150" cy="365" r="5" fill="#fff" stroke="#1d2433" stroke-width="2.5"/>
       </g>
@@ -199,8 +209,8 @@
     </svg>
 
     <div class="controls">
-      <button id="btnS" type="button">Είσοδος S:<span class="v">0</span></button>
-      <button id="btnR" type="button">Είσοδος R:<span class="v">0</span></button>
+      <button id="btnS" type="button" class="push">Μπουτόν SW1 · Είσοδος S:<span class="v">0</span></button>
+      <button id="btnR" type="button" class="push">Μπουτόν SW2 · Είσοδος R:<span class="v">0</span></button>
       <label class="chk"><input type="checkbox" id="slow"> Αργή κίνηση (καθυστέρηση πύλης)</label>
     </div>
     <p class="status" id="status"></p>
@@ -211,13 +221,12 @@
       <h2 style="margin:0">Χρονοδιάγραμμα (τελευταία 10 s)</h2>
       <div class="controls" style="margin:0">
         <button id="btnAuto" type="button">▶ Αυτόματη ακολουθία</button>
-        <button id="btnRace" type="button">⚡ Ταυτόχρονη απελευθέρωση</button>
         <button id="btnPause" type="button">⏸ Παύση</button>
         <button id="btnClear" type="button">Καθαρισμός</button>
       </div>
     </div>
     <canvas id="timing" aria-label="Χρονοδιάγραμμα των εισόδων και των εξόδων Q και Q αρνημένο"></canvas>
-    <p class="note" style="margin-top:8px">Η <b>αυτόματη ακολουθία</b> περνά κάθε 1 s από: Θέση → Αμετάβλητη → Μηδενισμός → Αμετάβλητη. Το κουμπί <b>⚡ Ταυτόχρονη απελευθέρωση</b> φέρνει τον μανταλωτή στη μη χρησιμοποιούμενη κατάσταση και μετά αλλάζει <b>και τις δύο</b> εισόδους ταυτόχρονα στην αμετάβλητη κατάσταση.</p>
+    <p class="note" style="margin-top:8px">Η <b>αυτόματη ακολουθία</b> περνά κάθε 1 s από: Θέση → Αμετάβλητη → Μηδενισμός → Αμετάβλητη. Τα μπουτόν πατιούνται για λίγο (παλμός) και η έξοδος κρατά την τιμή της αφού αφεθούν.</p>
   </div>
 
   <div class="grid">
@@ -247,10 +256,10 @@
   <div class="card">
     <h2>Διερεύνηση</h2>
     <ol class="explore">
-        <li>Ξεκίνα με S = R = 0. Κλείσε το SW1 (S = 1) και μετά άνοιξέ το ξανά (S = 0). Τι τιμή κρατά το Q; Σε τι διαφέρει αυτό από μια απλή πύλη;</li>
-        <li>Φέρε πρώτα το Q στο 1 (S = 1 και μετά ξανά S = 0). Ενεργοποίησε την <b>αργή κίνηση</b> και δώσε R = 1. Ποια έξοδος αλλάζει πρώτη; Γιατί η άλλη αλλάζει ένα βήμα αργότερα;</li>
-        <li>Με S = R = 0 το Q μπορεί να είναι 0 ή 1. Από τι εξαρτάται κάθε φορά;</li>
-        <li>Πάτησε <b>«Ταυτόχρονη απελευθέρωση»</b> μερικές φορές. Τι βλέπεις στο χρονοδιάγραμμα; Είναι πάντα ίδια η τελική κατάσταση; Γιατί η S = R = 1 δεν χρησιμοποιείται;</li>
+        <li>Πάτησε στιγμιαία το SW1 (S) και άφησέ το. Τι τιμή κρατά το Q αφού το S ξαναγίνει 0; Σε τι διαφέρει αυτό από μια απλή πύλη;</li>
+        <li>Φέρε πρώτα το Q στο 1 (στιγμιαίο πάτημα του SW1). Ενεργοποίησε την <b>αργή κίνηση</b> και κράτα πατημένο το SW2 (R = 1). Ποια έξοδος αλλάζει πρώτη; Γιατί η άλλη αλλάζει ένα βήμα αργότερα;</li>
+        <li>Με S = R = 0 (κανένα μπουτόν πατημένο) το Q μπορεί να είναι 0 ή 1. Από τι εξαρτάται κάθε φορά;</li>
+        <li>Γιατί χρησιμοποιούμε μπουτόν που πατιούνται ένα τη φορά; Δες στον πίνακα αληθείας τι θα γινόταν με S = R = 1. Γιατί η κατάσταση αυτή δεν χρησιμοποιείται;</li>
     </ol>
   </div>
 </div>
@@ -291,11 +300,10 @@
   function wire(id, v){ var e = $(id); if (e) e.setAttribute('stroke', vColor(v)); }
   function vtag(id, v){ var t = $(id); t.textContent = fmtV(v); t.setAttribute('fill', v >= 1 ? vColor(Math.max(v, 2.5)) : '#5b6475'); }
   function switchClosed(k){ return NOR ? st[k] === 1 : st[k] === 0; }
-  function setSwitch(k, y){
-    var c = switchClosed(k), lever = $('sw' + k).querySelector('.lever');
-    lever.setAttribute('x2', c ? 150 : 145);
-    lever.setAttribute('y2', c ? y : y - 25);
-    $('sw' + k).setAttribute('aria-checked', c ? 'true' : 'false');
+  function setSwitch(k){
+    var c = switchClosed(k);
+    $('sw' + k).querySelector('.plunger').setAttribute('transform', c ? 'translate(0,12)' : '');
+    $('sw' + k).setAttribute('aria-pressed', c ? 'true' : 'false');
   }
   var Y_IN = NOR ? {R:115, S:365} : {S:115, R:365};
 
@@ -310,7 +318,7 @@
   function render(){
     ['S','R'].forEach(function(k){
       var v = st[k] * VCC;
-      setSwitch(k, Y_IN[k]);
+      setSwitch(k);
       wire('w' + k + '_node', v); wire('w' + k + '_pd', v);
       if (NOR){ wire('w' + k + '_src', VCC); wire('w' + k + '_gnd', 0); }
       else { wire('w' + k + '_src', 0); wire('w' + k + '_gsw', 0); wire('w' + k + '_vcc', VCC); }
@@ -456,23 +464,52 @@
     st.S = S; st.R = R; lastRace = false; racing = false;
     record(); kick();
   }
-  function toggle(k){
-    stopAuto();
-    if (k === 'S') setInputs(1 - st.S, st.R); else setInputs(st.S, 1 - st.R);
+  /* μπουτόν: η είσοδος είναι ενεργή μόνο όσο είναι πατημένο, ένα τη φορά */
+  var pressed = null;
+  function applyPress(){
+    var act = NOR ? 1 : 0, idle = NOR ? 0 : 1;
+    setInputs(pressed === 'S' ? act : idle, pressed === 'R' ? act : idle);
+  }
+  function press(k){
+    if (pressed) return;               // ήδη πατημένο άλλο μπουτόν: αγνοείται
+    stopAuto(); pressed = k; applyPress();
+  }
+  function release(k){
+    if (pressed !== k) return;
+    pressed = null; applyPress();
   }
   ['S','R'].forEach(function(k){
-    var g = $('sw' + k);
-    g.addEventListener('click', function(){ toggle(k); });
-    g.addEventListener('keydown', function(e){ if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); toggle(k); } });
-    $('btn' + k).addEventListener('click', function(){ toggle(k); });
+    [$('sw' + k), $('btn' + k)].forEach(function(el){
+      el.addEventListener('pointerdown', function(e){
+        if (e.button !== undefined && e.button !== 0) return;
+        e.preventDefault();
+        try { el.setPointerCapture(e.pointerId); } catch(_){}
+        press(k);
+      });
+      ['pointerup','pointercancel','lostpointercapture'].forEach(function(ev){
+        el.addEventListener(ev, function(){ release(k); });
+      });
+      el.addEventListener('keydown', function(e){
+        if ((e.key === ' ' || e.key === 'Enter')){ e.preventDefault(); e.stopPropagation(); if (!e.repeat) press(k); }
+      });
+      el.addEventListener('keyup', function(e){
+        if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); e.stopPropagation(); release(k); }
+      });
+    });
   });
-  document.addEventListener('keydown', function(e){
-    if (e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT')) return;
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
+  function keyOf(e){
     var k = (e.key || '').toUpperCase();
-    if (k === 'S' || k === 'Σ') toggle('S');
-    if (k === 'R' || k === 'Ρ') toggle('R');
+    if (k === 'S' || k === 'Σ') return 'S';
+    if (k === 'R' || k === 'Ρ') return 'R';
+    return null;
+  }
+  document.addEventListener('keydown', function(e){
+    if (e.target && e.target.tagName === 'INPUT') return;
+    if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+    var k = keyOf(e); if (k) press(k);
   });
+  document.addEventListener('keyup', function(e){ var k = keyOf(e); if (k) release(k); });
+  window.addEventListener('blur', function(){ if (pressed) release(pressed); });
 
   var autoTimer = null, seqI = 0, raceTimer = null;
   function stopAuto(){
@@ -488,15 +525,6 @@
       seqI = (seqI + 1) % CFG.seq.length; setInputs(CFG.seq[seqI][0], CFG.seq[seqI][1]);
     }, 1000);
     this.textContent = '■ Διακοπή ακολουθίας'; this.classList.add('on');
-  });
-  $('btnRace').addEventListener('click', function(){
-    stopAuto();
-    if (paused) $('btnPause').click();
-    setInputs(CFG.forbidden[0], CFG.forbidden[1]);
-    raceTimer = setTimeout(function(){
-      raceTimer = null;
-      setInputs(CFG.hold[0], CFG.hold[1]);   // και οι δύο είσοδοι αλλάζουν ταυτόχρονα
-    }, $('slow').checked ? 2500 : 1200);
   });
   $('btnPause').addEventListener('click', function(){
     paused = !paused;

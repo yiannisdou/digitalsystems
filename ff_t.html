@@ -94,19 +94,47 @@
   body.dark svg [fill="#fdfdfd"],
   body.dark svg [fill="#fff"]{fill:#161e2b}
   body.dark svg [fill="#f2d4cc"]{fill:#4a2a24}
+  /* ---------- συμπαγής διάταξη μίας οθόνης ---------- */
+  .wrap{max-width:1200px;padding:10px 12px 12px}
+  h1{font-size:1.35rem;margin:0}
+  h2{font-size:1.05rem;margin:0 0 6px}
+  .back{margin:0 0 2px;font-size:.9rem}
+  .sub{margin:4px 0 10px;font-size:.95rem}
+  .card{padding:10px 12px;margin-bottom:10px}
+  .main{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:10px}
+  .main .card{margin-bottom:10px}
+  @media (max-width:820px){.main{grid-template-columns:1fr}}
+  .controls{gap:8px;margin-top:6px}
+  button{padding:5px 11px;font-size:.95rem}
+  .chk{font-size:.95rem}
+  .chk input[type=range]{width:110px}
+  #freqVal{color:var(--ink);min-width:3.6em}
+  .status{font-size:1rem;margin:6px 0 0;min-height:1.3em}
+  .status2{font-size:.95rem;margin:2px 0 0}
+  table{font-size:.98rem}
+  th,td{padding:4px 6px}
+  .eq{font-size:1.05rem;margin:2px 0 8px}
+  .note{font-size:.95rem;margin:0}
+  .small{font-size:.85rem;color:var(--muted);margin:4px 0 0}
+  .dash{color:#1e7bff;font-weight:700;letter-spacing:-1px}
+  canvas{height:175px}
+  .legend{margin-bottom:6px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a id="backLink" class="back" href="index.html">← Όλες οι προσομοιώσεις</a>
   <div class="head">
-    <h1>Flip-flop T με σκανδάλιση στο ανερχόμενο μέτωπο</h1>
+    <div>
+      <a id="backLink" class="back" href="index.html">← Όλες οι προσομοιώσεις</a>
+      <h1>Flip-flop T με σκανδάλιση στο ανερχόμενο μέτωπο</h1>
+    </div>
     <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
   </div>
-  <p class="sub">Κάνε κλικ στον διακόπτη <b>SW1</b> (T) ή πάτησε <kbd>T</kbd> για να ορίσεις την είσοδο. Το ρολόι <b>CLK</b> είναι αυτόματο: με τον ρυθμιστή αλλάζεις τη συχνότητά του. Παρατήρησε τι κάνει η έξοδος Q σε κάθε ανερχόμενο μέτωπο.</p>
+  <p class="sub">Άλλαξε το T με τον διακόπτη (ή το πλήκτρο <kbd>T</kbd>), ρύθμισε τη συχνότητα του CLK και παρατήρησε τι κάνει η έξοδος Q σε κάθε ανερχόμενο μέτωπο.</p>
 
-  <div class="card" id="circuitCard">
-    <svg viewBox="0 0 840 440" role="img" aria-label="Flip-flop T με διακόπτες εισόδου, γεννήτρια ρολογιού, αντιστάσεις pull-down 10 kΩ και LED στις εξόδους Q και Q αρνημένο με αντιστάσεις 220 Ω">
+  <div class="main">
+    <div class="card" id="circuitCard">
+      <svg viewBox="0 25 840 405" role="img" aria-label="Flip-flop T με διακόπτες εισόδου, γεννήτρια ρολογιού, αντιστάσεις pull-down 10 kΩ και LED στις εξόδους Q και Q αρνημένο με αντιστάσεις 220 Ω">
       <defs>
         <radialGradient id="glow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="#ff5a2a" stop-opacity=".8"/>
@@ -191,35 +219,20 @@
       <polyline class="wire" id="wQn_gnd" points="760,395 760,425"/>
       <use href="#gnd" x="760" y="425"/>
       <text class="ltag" id="lQn" x="572" y="320">0</text>
-    </svg>
-    <div class="controls">
-      <button id="btnT" type="button">Είσοδος T:<span class="v">0</span></button>
-    </div>
-    <div class="controls">
-      <label class="chk" for="freq">Συχνότητα ρολογιού
-        <input type="range" id="freq" min="0.2" max="2" step="0.1" value="0.5" style="width:180px">
-        <b id="freqVal" style="color:var(--ink);min-width:4.2em">0,5 Hz</b>
-      </label>
-      <button id="btnAutoClk" type="button">⏸ Σταμάτημα ρολογιού</button>
-    </div>
-    <p class="status" id="status"></p>
-    <p class="status2" id="status2"></p>
-  </div>
-
-  <div class="card">
-    <div class="legend">
-      <h2 style="margin:0">Χρονοδιάγραμμα (τελευταία 10 s)</h2>
-      <div class="controls" style="margin:0">
-        <button id="btnPause" type="button">⏸ Παύση</button>
-        <button id="btnClear" type="button">Καθαρισμός</button>
+      </svg>
+      <div class="controls">
+        <button id="btnT" type="button">Είσοδος T:<span class="v">0</span></button>
+        <label class="chk" for="freq">CLK
+          <input type="range" id="freq" min="0.2" max="2" step="0.1" value="0.5">
+          <b id="freqVal">0,5 Hz</b>
+        </label>
+        <button id="btnAutoClk" type="button">⏸ Σταμάτημα</button>
       </div>
+      <p class="status" id="status"></p>
+      <p class="status2" id="status2"></p>
     </div>
-    <canvas id="timing" aria-label="Χρονοδιάγραμμα του ρολογιού, των εισόδων και της εξόδου Q"></canvas>
-    <p class="note" style="margin-top:8px">Οι <b>διακεκομμένες γραμμές</b> δείχνουν τα <b>ανερχόμενα μέτωπα</b> του ρολογιού (CLK από 0 σε 1): μόνο τότε μπορεί να αλλάξει η έξοδος Q.</p>
-  </div>
 
-  <div class="grid">
-    <div class="card">
+    <div class="card side">
       <h2>Πίνακας αληθείας</h2>
       <div class="eq">Q<sub>n+1</sub> = T ⊕ Q<sub>n</sub></div>
       <table id="tt">
@@ -229,24 +242,21 @@
           <tr data-r="1"><td>1</td><td><span class="ov">Q</span><sub>n</sub></td><td>Εναλλαγή (Toggle)</td></tr>
         </tbody>
       </table>
-      <p class="note" style="margin-top:8px">Q<sub>n</sub>: η έξοδος πριν από το ανερχόμενο μέτωπο · Q<sub>n+1</sub>: η έξοδος μετά το μέτωπο. Τονίζεται η γραμμή που θα εφαρμοστεί στο επόμενο μέτωπο.</p>
-    </div>
-    <div class="card">
-      <h2>Πώς λειτουργεί</h2>
-      <p class="note">Το flip-flop T (Toggle, εναλλαγής) έχει μία είσοδο. Στο <b>ανερχόμενο μέτωπο</b> του ρολογιού: αν <b>T = 0</b> η έξοδος μένει ίδια, αν <b>T = 1</b> η έξοδος αλλάζει στην αντίθετη τιμή.</p>
-      <p class="note">Δεν κυκλοφορεί συνήθως ως ξεχωριστό ολοκληρωμένο. Φτιάχνεται από ένα flip-flop <b>JK με J = K = T</b>, ή από ένα flip-flop D με μια πύλη XOR (D = T ⊕ Q).</p>
-      <p class="note">Με T = 1 και συνεχές ρολόι, το Q έχει τη <b>μισή συχνότητα</b> του CLK. Αν συνδέσουμε πολλά flip-flop T στη σειρά, φτιάχνουμε έναν <b>δυαδικό απαριθμητή</b>.</p>
+      <p class="small">Q<sub>n</sub>: πριν από το μέτωπο · Q<sub>n+1</sub>: μετά το μέτωπο</p>
+      <h2 style="margin-top:12px">Λειτουργία</h2>
+      <p class="note">Στο <b>ανερχόμενο μέτωπο</b> του CLK: με <b>T = 0</b> η έξοδος μένει ίδια, με <b>T = 1</b> αλλάζει στην αντίθετη τιμή (Toggle). Με T = 1 το Q έχει τη μισή συχνότητα του CLK.</p>
     </div>
   </div>
 
   <div class="card">
-    <h2>Διερεύνηση</h2>
-    <ol class="explore">
-        <li>Με T = 0 περίμενε μερικούς παλμούς ρολογιού. Τι κάνει το Q;</li>
-        <li>Βάλε T = 1 και μέτρησε 6 ανερχόμενα μέτωπα. Πόσες φορές άναψε το LED1; Γράψε την ακολουθία τιμών του Q.</li>
-        <li>Με T = 1 σύγκρινε στο χρονοδιάγραμμα τη συχνότητα του Q με αυτή του CLK. Τι γίνεται αν διπλασιάσεις τη συχνότητα του ρολογιού;</li>
-        <li>Αν η έξοδος Q αυτού του flip-flop έδινε το ρολόι σε ένα δεύτερο flip-flop T (με T = 1), τι συχνότητα θα είχε η έξοδός του; Τι θα «μετρούσαν» μαζί τα δύο flip-flop;</li>
-    </ol>
+    <div class="legend">
+      <h2 style="margin:0">Χρονοδιάγραμμα <span class="small" style="font-weight:400">(τελευταία 10 s · <span class="dash">- - -</span> ανερχόμενο μέτωπο)</span></h2>
+      <div class="controls" style="margin:0">
+        <button id="btnPause" type="button">⏸ Παύση</button>
+        <button id="btnClear" type="button">Καθαρισμός</button>
+      </div>
+    </div>
+    <canvas id="timing" aria-label="Χρονοδιάγραμμα του ρολογιού, των εισόδων και της εξόδου Q"></canvas>
   </div>
 </div>
 
@@ -451,12 +461,12 @@
   function startAutoClk(){
     if (autoClk) clearInterval(autoClk);
     autoClk = setInterval(function(){ setClk(1 - clk); }, 500 / freq());
-    $('btnAutoClk').textContent = '⏸ Σταμάτημα ρολογιού'; $('btnAutoClk').classList.remove('on');
+    $('btnAutoClk').textContent = '⏸ Σταμάτημα'; $('btnAutoClk').classList.remove('on');
     showFreq();
   }
   function stopAutoClk(){
     if (autoClk){ clearInterval(autoClk); autoClk = null; }
-    $('btnAutoClk').textContent = '▶ Εκκίνηση ρολογιού'; $('btnAutoClk').classList.add('on');
+    $('btnAutoClk').textContent = '▶ Εκκίνηση'; $('btnAutoClk').classList.add('on');
     showFreq();
   }
   $('btnAutoClk').addEventListener('click', function(){ if (autoClk) stopAutoClk(); else startAutoClk(); });

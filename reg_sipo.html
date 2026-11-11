@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Προσομοίωση: Καταχωρητής ολίσθησης σειριακής εισόδου – παράλληλης εξόδου (SIPO)</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1d2433; --muted:#5b6475;
+    --line:#d5dbe5; --hi:#e8411f; --accent:#0f7b6c; --w0:#8a94a6; --w1:#e8411f; --fl:#1e7bff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Calibri,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1200px;margin:0 auto;padding:10px 12px 12px}
+  h1{font-size:1.35rem;margin:0}
+  h2{font-size:1.05rem;margin:0 0 6px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .back{display:inline-block;margin:0 0 2px;color:var(--muted);text-decoration:none;font-size:.9rem}
+  .back:hover{color:var(--ink);text-decoration:underline}
+  body.embedded .back{display:none}
+  .sub{color:var(--muted);margin:4px 0 10px;font-size:.95rem;line-height:1.35}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+  .bottom{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:10px}
+  @media (max-width:820px){.bottom{grid-template-columns:1fr}}
+  svg{width:100%;height:auto;display:block;user-select:none;-webkit-user-select:none}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;margin-top:6px}
+  button{font:inherit;font-size:.95rem;padding:5px 11px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  button:hover{background:#f0f3f8}
+  button.on{background:#e7f4f1;border-color:var(--accent)}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:.95rem;color:var(--muted)}
+  .chk input[type=range]{width:110px}
+  #freqVal{color:var(--ink);min-width:3.6em}
+  .sep{width:1px;height:24px;background:var(--line)}
+  .status{text-align:center;font-size:1rem;margin:6px 0 0;min-height:1.3em}
+  .status2{text-align:center;font-size:.95rem;margin:2px 0 0;color:var(--muted);min-height:1.3em}
+  .status2 b{color:var(--ink)}
+  .mono{font-family:Consolas,"Courier New",monospace;font-weight:700;letter-spacing:1px}
+  canvas{width:100%;height:300px;display:block;border:1px solid var(--line);border-radius:8px;background:#fcfdfe}
+  .legend{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:6px}
+  .legend button{padding:3px 9px;font-size:.88rem}
+  .small{font-size:.85rem;color:var(--muted);margin:4px 0 0}
+  .dash{color:var(--fl);font-weight:700;letter-spacing:-1px}
+  .note{color:var(--muted);font-size:.95rem;line-height:1.4;margin:0}
+  .note b{color:var(--ink)}
+  .hist{max-height:150px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-size:.95rem;text-align:center}
+  th,td{border-bottom:1px solid var(--line);padding:3px 6px}
+  th{background:#eef2f7;position:sticky;top:0}
+  td.one{color:var(--hi);font-weight:700}
+  tr.last td{background:#fff3c4}
+  tr.clr td{color:var(--muted);font-style:italic}
+
+  /* SVG */
+  .wire{fill:none;stroke-width:4;stroke-linejoin:round;stroke-linecap:round}
+  .w0{stroke:var(--w0)} .w1{stroke:var(--w1)}
+  .blk{fill:var(--card);stroke:var(--ink);stroke-width:3}
+  .blk.fl{stroke:var(--fl);stroke-width:5}
+  .ink{stroke:var(--ink);fill:none;stroke-width:2.5}
+  .inkf{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
+  .t{fill:var(--ink);font-weight:700}
+  .tm{fill:var(--muted)}
+  .v0{fill:var(--w0);font-weight:700} .v1{fill:var(--w1);font-weight:700}
+  .dot{fill:var(--ink)}
+  .tg{cursor:pointer}
+  .tg rect{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
+  .tg.on rect{fill:#ffe1d6;stroke:var(--w1)}
+  .tg:hover rect{stroke-width:3.5}
+  .tg:focus{outline:none}
+  .tg:focus-visible rect{stroke:var(--accent);stroke-dasharray:4 3}
+  .lamp0{fill:#e9ecf1;stroke:var(--ink);stroke-width:2}
+  .lamp1{fill:#ff4b1f;stroke:var(--ink);stroke-width:2}
+  .halo{fill:url(#glow)}
+
+  /* Σκούρο θέμα */
+  body.dark{--bg:#0d1219;--card:#161e2b;--ink:#e6ebf2;--muted:#9aa6b8;--line:#2c3a4f;--w0:#6b778b;--w1:#ff6a3d;--fl:#3d9bff}
+  body.dark button{background:#202c3f;color:var(--ink)}
+  body.dark button:hover{background:#2a3a55}
+  body.dark button.on{background:#123a33;border-color:#2fc4a8}
+  body.dark th{background:#202c3f}
+  body.dark tr.last td{background:#4a3b10}
+  body.dark canvas{background:#101824}
+  body.dark .tg.on rect{fill:#4a2a24}
+  body.dark .lamp0{fill:#2a3342}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <a id="backLink" class="back" href="index.html">← Όλες οι προσομοιώσεις</a>
+      <h1>Καταχωρητής ολίσθησης σειριακής εισόδου – παράλληλης εξόδου (SIPO)</h1>
+    </div>
+    <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
+  </div>
+  <p class="sub">Δώσε τα bit ένα-ένα στη <b>σειριακή είσοδο</b> (κλικ στο κουτάκι 0/1), ένα σε κάθε παλμό ρολογιού, και διάβασε τον αριθμό ταυτόχρονα στις <b>παράλληλες εξόδους</b> Q3–Q0. Δοκίμασε και την <b>κυκλική ολίσθηση</b>.</p>
+
+  <div class="card">
+    <svg id="sch" viewBox="0 14 1000 336" role="img" aria-label="Καταχωρητής SIPO τεσσάρων bit με flip-flop D, κοινό ρολόι και είσοδο μηδενισμού"></svg>
+    <div class="controls">
+      <button id="btnVar" type="button">↻ Κυκλική ολίσθηση: ΟΧΙ</button>
+      <label class="chk" for="freq">CLK
+        <input type="range" id="freq" min="0.2" max="2" step="0.1" value="0.5">
+        <b id="freqVal">0,5 Hz</b>
+      </label>
+      <button id="btnRun" type="button">⏸ Σταμάτημα</button>
+      <button id="btnStep" type="button" title="Δίνει έναν παλμό ρολογιού (το ρολόι σταματά)">⏭ Ένας παλμός</button>
+      <span class="sep"></span>
+      <button id="btnClr" type="button" title="Μηδενισμός όλων των flip-flop (είσοδος CLR)">CLR · Μηδενισμός</button>
+    </div>
+    <p class="status" id="status"></p>
+    <p class="status2" id="status2"></p>
+  </div>
+
+  <div class="bottom">
+    <div class="card">
+      <div class="legend">
+        <h2 style="margin:0;white-space:nowrap">Χρονοδιάγραμμα <span class="small" style="font-weight:400"><span class="dash">- - -</span> ↓ μέτωπο</span></h2>
+        <div class="controls" style="margin:0;flex-wrap:nowrap">
+          <button id="btnPause" type="button">⏸ Παύση</button>
+          <button id="btnClear" type="button">Καθαρισμός</button>
+        </div>
+      </div>
+      <canvas id="timing" aria-label="Χρονοδιάγραμμα του ρολογιού, των εισόδων και των εξόδων Q3 έως Q0"></canvas>
+    </div>
+    <div class="card">
+      <h2>Περιεχόμενο μετά από κάθε παλμό</h2>
+      <div class="hist"><table id="hist"><thead><tr id="histHead"></tr></thead><tbody></tbody></table></div>
+      <h2 style="margin-top:10px">Λειτουργία</h2>
+      <p class="note">Τα bit μπαίνουν <b>σειριακά</b> (ένα σε κάθε κατερχόμενο μέτωπο του ρολογιού) και εμφανίζονται <b>ταυτόχρονα</b> στις εξόδους Q3–Q0: μετατροπή από σειριακή σε παράλληλη μορφή. Στην <b>κυκλική ολίσθηση</b> η έξοδος Q0 τροφοδοτεί την είσοδο του FF3 και η αποθηκευμένη πληροφορία περιστρέφεται.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var CFG = {"type": "sipo"};
+  var TYPE = CFG.type;
+  var q = [0,0,0,0];            // q[i] = Qi (FF0 ... FF3)
+  var d = [0,0,0,0];            // παράλληλες είσοδοι Di
+  var sin = 0, load = 0, clk = 0, clr = 1;
+  var dirLeft = false, cyclic = false;
+  var pulses = 0, lastMsg = '', flashUntil = 0, dark = false;
+  var BX = {3:260, 2:430, 1:600, 0:770};
+
+  function $(id){ return document.getElementById(id); }
+  function bits(){ return '' + q[3] + q[2] + q[1] + q[0]; }
+  function serialOut(){ return (TYPE === 'siso' && dirLeft) ? q[3] : q[0]; }
+  function clkEff(){ return TYPE === 'pipo' ? (clk & load) : clk; }
+
+  /* ---------- σχεδίαση ---------- */
+  function W(pts, v){ return '<polyline class="wire ' + (v ? 'w1' : 'w0') + '" points="' + pts + '"/>'; }
+  function T(x, y, s, size, cls, anchor){ return '<text x="' + x + '" y="' + y + '" font-size="' + size + '" class="' + (cls || 't') + '" text-anchor="' + (anchor || 'middle') + '">' + s + '</text>'; }
+  function dot(x, y){ return '<circle class="dot" cx="' + x + '" cy="' + y + '" r="5"/>'; }
+  function toggle(x, y, v, act, label, lx){
+    return '<g class="tg' + (v ? ' on' : '') + '" data-act="' + act + '" tabindex="0" role="switch" aria-checked="' + (v ? 'true' : 'false') + '" aria-label="' + label + '">' +
+      '<rect x="' + x + '" y="' + y + '" width="36" height="30" rx="6"/>' +
+      T(x + 18, y + 22, v, 20, v ? 'v1' : 'v0') + '</g>' +
+      T(lx !== undefined ? lx : x + 18, y - 6, label, 13, 't', lx !== undefined ? 'start' : 'middle');
+  }
+  function lamp(x, y, v, label, lpos){
+    var s = v ? '<circle class="halo" cx="' + x + '" cy="' + y + '" r="26"/>' : '';
+    s += '<circle class="' + (v ? 'lamp1' : 'lamp0') + '" cx="' + x + '" cy="' + y + '" r="11"/>';
+    if (lpos === 'above') s += T(x, y - 18, label, 14);
+    else if (lpos === 'left') s += T(x - 18, y + 5, label, 14, 't', 'end');
+    else s += T(x + 18, y + 5, label, 14, 't', 'start');
+    return s;
+  }
+  function block(i, mirror){
+    var bx = BX[i], fl = performance.now() < flashUntil ? ' fl' : '';
+    var s = '<rect class="blk' + fl + '" x="' + bx + '" y="100" width="100" height="110" rx="4"/>';
+    s += T(mirror ? bx + 90 : bx + 10, 131, 'D', 15, 't', mirror ? 'end' : 'start');
+    s += T(mirror ? bx + 10 : bx + 90, 131, 'Q', 15, 't', mirror ? 'start' : 'end');
+    s += T(bx + 50, 150, 'FF' + i, 14, 'tm');
+    s += T(bx + 50, 190, q[i], 30, q[i] ? 'v1' : 'v0');
+    s += '<path class="inkf" d="M' + bx + ',177 L' + (bx + 12) + ',185 L' + bx + ',193"/>';
+    s += '<circle class="inkf" cx="' + (bx - 6) + '" cy="185" r="5"/>';
+    s += '<circle class="inkf" cx="' + (bx + 50) + '" cy="215" r="5"/>';
+    s += T(bx + 50, 206, 'CLR', 10, 'tm');
+    return s;
+  }
+
+  function draw(){
+    var s = '<defs><radialGradient id="glow" cx="50%" cy="50%" r="50%">' +
+      '<stop offset="0%" stop-color="#ff5a2a" stop-opacity=".7"/><stop offset="60%" stop-color="#ff5a2a" stop-opacity=".18"/>' +
+      '<stop offset="100%" stop-color="#ff5a2a" stop-opacity="0"/></radialGradient>' +
+      '<g id="gnd"><line x1="-14" y1="0" x2="14" y2="0" class="ink"/><line x1="-9" y1="6" x2="9" y2="6" class="ink"/><line x1="-4" y1="12" x2="4" y2="12" class="ink"/></g></defs>';
+    var ce = clkEff();
+
+    /* ρολόι */
+    var gx = 80, gy = TYPE === 'pipo' ? 302 : 292, busStart;
+    if (TYPE === 'pipo'){
+      s += W('102,302 125,302', clk);
+      s += W('50,160 112,160 112,282 125,282', load);
+      s += toggle(14, 145, load, 'load', 'ΦΟΡΤΩΣΗ', 10);
+      s += '<path class="inkf" d="M125,272 h22 a20,20 0 0 1 0,40 h-22 z"/>' + T(141, 297, '&amp;', 13, 'tm');
+      s += W('167,292 ' + (BX[0] - 22) + ',292', ce);
+      busStart = 167;
+    } else {
+      s += W('102,292 ' + (BX[0] - 22) + ',292', ce);
+      busStart = 102;
+    }
+    s += '<line x1="' + gx + '" y1="' + (gy + 22) + '" x2="' + gx + '" y2="' + (gy + 32) + '" class="ink"/><use href="#gnd" x="' + gx + '" y="' + (gy + 32) + '"/>';
+    s += '<circle class="inkf" cx="' + gx + '" cy="' + gy + '" r="22"/>';
+    s += '<path class="ink" d="M' + (gx - 13) + ',' + (gy + 6) + ' h5 v-12 h8 v12 h8 v-12 h5"/>';
+    s += T(gx - 28, gy + 5, 'CLK', 14, 't', 'end');
+    [3,2,1,0].forEach(function(i){
+      var x = BX[i] - 22;
+      s += W(x + ',292 ' + x + ',185 ' + (BX[i] - 11) + ',185', ce);
+      if (i !== 0) s += dot(x, 292);
+    });
+
+    /* μηδενισμός CLR (ενεργός στο 0) */
+    s += W('58,232 ' + (BX[0] + 50) + ',232', clr);
+    [3,2,1,0].forEach(function(i){
+      s += W((BX[i] + 50) + ',232 ' + (BX[i] + 50) + ',220', clr);
+      if (i !== 0) s += dot(BX[i] + 50, 232);
+    });
+    s += '<g class="tg' + (clr ? '' : ' on') + '" data-act="clr" role="button" tabindex="0" aria-label="Μηδενισμός CLR: κράτα πατημένο">' +
+         '<rect x="14" y="218" width="44" height="28" rx="6"/>' + T(36, 237, 'CLR', 13, clr ? 'v0' : 'v1') + '</g>';
+
+    /* διαδρομή δεδομένων */
+    if (TYPE === 'siso' || TYPE === 'sipo'){
+      if (TYPE === 'siso' && dirLeft){
+        s += toggle(944, 110, sin, 'sin', 'Σειριακή είσοδος', 900);
+        s += W('944,125 ' + (BX[0] + 100) + ',125', sin);
+        [0,1,2].forEach(function(i){ s += W(BX[i] + ',125 ' + (BX[i + 1] + 100) + ',125', q[i]); });
+        s += W(BX[3] + ',125 212,125', q[3]);
+        s += lamp(200, 125, q[3], 'Σειριακή έξοδος', 'above');
+      } else {
+        if (!cyclic){
+          s += toggle(20, 110, sin, 'sin', 'Σειριακή είσοδος', 14);
+          s += W('56,125 ' + BX[3] + ',125', sin);
+        } else {
+          s += W((BX[0] + 115) + ',125 950,125 950,80 225,80 225,125 ' + BX[3] + ',125', q[0]);
+          s += T(140, 85, 'κυκλική', 13, 'tm') + T(140, 100, 'ολίσθηση', 13, 'tm');
+        }
+        [3,2,1].forEach(function(i){ s += W((BX[i] + 100) + ',125 ' + BX[i - 1] + ',125', q[i]); });
+        if (TYPE === 'siso'){
+          s += W((BX[0] + 100) + ',125 918,125', q[0]);
+          s += lamp(930, 125, q[0], 'Σειριακή έξοδος', 'above');
+        } else {
+          if (!cyclic) s += W((BX[0] + 100) + ',125 ' + (BX[0] + 115) + ',125', q[0]);
+          [3,2,1,0].forEach(function(i){
+            var x = BX[i] + 115;
+            s += W(x + ',125 ' + x + ',61', q[i]) + dot(x, 125);
+            s += lamp(x, 50, q[i], 'Q' + i, 'right');
+          });
+          s += T(980, 30, 'Παράλληλες έξοδοι', 13, 'tm', 'end');
+        }
+      }
+    } else if (TYPE === 'piso'){
+      s += toggle(14, 145, load, 'load', 'ΦΟΡΤΩΣΗ', 10);
+      s += W('50,160 ' + (BX[0] - 33) + ',160', load);
+      s += T(168, 130, '0', 16, 'v0') + W('178,125 ' + (BX[3] - 50) + ',125', 0);
+      [3,2,1,0].forEach(function(i){
+        var bx = BX[i], mx = bx - 50, cx = bx - 33;
+        var sel = load ? d[i] : (i === 3 ? 0 : q[i + 1]);
+        s += toggle(cx - 18, 22, d[i], 'd' + i, 'D' + i);
+        s += W(cx + ',52 ' + cx + ',105', d[i]);
+        if (i !== 3) s += W((BX[i + 1] + 100) + ',125 ' + mx + ',125', q[i + 1]);
+        s += W(cx + ',145 ' + cx + ',160', load) + (i !== 0 ? dot(cx, 160) : '');
+        s += W((bx - 16) + ',125 ' + bx + ',125', sel);
+        s += '<path class="inkf" d="M' + mx + ',105 h34 v40 h-34 z"/>' + T(cx, 129, 'MUX', 9, 'tm');
+        s += T(cx + 6, 116, '1', 9, 'tm') + T(mx + 5, 140, '0', 9, 'tm', 'start');
+      });
+      s += W((BX[0] + 100) + ',125 918,125', q[0]);
+      s += lamp(930, 125, q[0], 'Σειριακή έξοδος', 'above');
+      s += T(120, 40, 'Παράλληλες', 12, 'tm') + T(120, 54, 'είσοδοι', 12, 'tm');
+    } else if (TYPE === 'pipo'){
+      [3,2,1,0].forEach(function(i){
+        var bx = BX[i], cx = bx - 33, ox = bx + 115;
+        s += toggle(cx - 18, 22, d[i], 'd' + i, 'D' + i);
+        s += W(cx + ',52 ' + cx + ',125 ' + bx + ',125', d[i]);
+        s += W((bx + 100) + ',125 ' + ox + ',125 ' + ox + ',327', q[i]);
+        s += lamp(ox, 340, q[i], 'Q' + i, 'right');
+      });
+      s += T(120, 40, 'Παράλληλες', 12, 'tm') + T(120, 54, 'είσοδοι', 12, 'tm');
+      s += T(985, 364, 'Παράλληλες έξοδοι', 12, 'tm', 'end');
+    }
+
+    /* flip-flop */
+    var mirror = TYPE === 'siso' && dirLeft;
+    [3,2,1,0].forEach(function(i){ s += block(i, mirror); });
+    $('sch').innerHTML = s;
+  }
+
+  /* ---------- πίνακας παλμών ---------- */
+  var IN_HEAD = (TYPE === 'siso' || TYPE === 'sipo') ? 'Είσοδος' : 'Φόρτωση';
+  var HAS_OUT = TYPE === 'siso' || TYPE === 'piso';
+  $('histHead').innerHTML = '<th>Παλμός</th><th>' + IN_HEAD + '</th><th>Q3</th><th>Q2</th><th>Q1</th><th>Q0</th>' + (HAS_OUT ? '<th>Σειρ. έξοδος</th>' : '');
+  function addRow(label, inp, cls){
+    var tb = document.querySelector('#hist tbody');
+    var prev = tb.querySelector('tr.last'); if (prev) prev.classList.remove('last');
+    var tr = document.createElement('tr'); tr.className = 'last' + (cls ? ' ' + cls : '');
+    var h = '<td>' + label + '</td><td>' + inp + '</td>';
+    [3,2,1,0].forEach(function(i){ h += '<td class="' + (q[i] ? 'one' : '') + '">' + q[i] + '</td>'; });
+    if (HAS_OUT) h += '<td class="' + (serialOut() ? 'one' : '') + '">' + serialOut() + '</td>';
+    tr.innerHTML = h; tb.appendChild(tr);
+    while (tb.rows.length > 40) tb.deleteRow(0);
+    var box = tb.parentNode.parentNode; box.scrollTop = box.scrollHeight;
+  }
+
+  /* ---------- λειτουργία ---------- */
+  function fallingEdge(){
+    var before = bits(), inp, what;
+    if (TYPE === 'siso' || TYPE === 'sipo'){
+      if (TYPE === 'siso' && dirLeft){
+        q = [sin, q[0], q[1], q[2]]; inp = '' + sin; what = 'ολίσθηση αριστερά';
+      } else if (cyclic){
+        q = [q[1], q[2], q[3], q[0]]; inp = '↻'; what = 'κυκλική ολίσθηση';
+      } else {
+        q = [q[1], q[2], q[3], sin]; inp = '' + sin; what = 'ολίσθηση δεξιά';
+      }
+    } else if (TYPE === 'piso'){
+      if (load){ q = d.slice(); what = 'παράλληλη φόρτωση'; }
+      else { q = [q[1], q[2], q[3], 0]; what = 'ολίσθηση δεξιά'; }
+      inp = '' + load;
+    } else {
+      q = d.slice(); inp = '1'; what = 'παράλληλη φόρτωση';
+    }
+    pulses++;
+    flashUntil = performance.now() + 380;
+    setTimeout(draw, 400);
+    var o = HAS_OUT ? ' · σειριακή έξοδος <b>' + serialOut() + '</b>' : '';
+    lastMsg = '<b>↓ Παλμός ' + pulses + ':</b> ' + what + ' &mdash; <span class="mono">' + before + '</span> &rarr; <span class="mono">' + bits() + '</span>' + o;
+    addRow(pulses + 'ος', inp);
+  }
+  function setClk(v){
+    if (v === clk) return;
+    var before = clkEff();
+    clk = v;
+    var after = clkEff();
+    var edge = before === 1 && after === 0 && clr === 1;
+    if (edge) fallingEdge();
+    record(edge); render();
+  }
+  function setLoad(v){
+    var before = clkEff();
+    load = v;
+    var after = clkEff();
+    if (before === 1 && after === 0 && clr === 1){ fallingEdge(); record(true); }   // πύλη AND: κλείνει όσο CLK = 1
+    else record(false);
+    render();
+  }
+  function setClr(v){
+    clr = v;
+    if (!clr){
+      q = [0,0,0,0]; pulses = 0;
+      lastMsg = '<b>CLR:</b> μηδενισμός όλων των flip-flop &rarr; <span class="mono">0000</span>';
+      addRow('CLR', '—', 'clr');
+    }
+    record(false); render();
+  }
+
+  function render(){
+    draw();
+    var s = 'Περιεχόμενο Q3 Q2 Q1 Q0 = <span class="mono">' + bits() + '</span>';
+    if (HAS_OUT) s += ' &nbsp;·&nbsp; Σειριακή έξοδος = <b>' + serialOut() + '</b>';
+    s += ' &nbsp;·&nbsp; CLK = ' + clk;
+    $('status').innerHTML = s;
+    $('status2').innerHTML = lastMsg || 'Αναμονή για κατερχόμενο μέτωπο του ρολογιού (από 1 σε 0).';
+  }
+
+  /* ---------- χρονοδιάγραμμα ---------- */
+  var WINDOW = 10000, events = [], paused = false, pausedAt = 0;
+  var TR = [{n:'CLK', f:'C'}];
+  if (TYPE === 'siso' || TYPE === 'sipo') TR.push({n:'Είσ.', f:'S'}); else TR.push({n:'Φόρτ.', f:'L'});
+  TR = TR.concat([{n:'Q3', f:'q3'}, {n:'Q2', f:'q2'}, {n:'Q1', f:'q1'}, {n:'Q0', f:'q0'}]);
+  function now(){ return performance.now(); }
+  function record(edge){ events.push({t: now(), C: clk, S: sin, L: load, q3: q[3], q2: q[2], q1: q[1], q0: q[0], edge: !!edge}); }
+  var cv = $('timing'), ctx = cv.getContext('2d');
+  function resize(){
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(cv.clientWidth * dpr); cv.height = Math.round(cv.clientHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  function drawTiming(){
+    var w = cv.clientWidth, h = cv.clientHeight;
+    var tNow = paused ? pausedAt : now(), t0 = tNow - WINDOW;
+    var left = 46, right = 10, top = 8, bottom = 22, pw = w - left - right;
+    var rowH = (h - top - bottom) / TR.length;
+    function X(t){ return left + (t - t0) / WINDOW * pw; }
+    ctx.clearRect(0, 0, w, h);
+    var P = dark ? {grid:'#253246', sep:'#2c3a4f', txt:'#9aa6b8', edge:'#3d9bff', c:'#c58cff', i:'#2fc4a8', q:'#ff6a3d'}
+                 : {grid:'#e6eaf0', sep:'#d5dbe5', txt:'#5b6475', edge:'#1e7bff', c:'#7c3aed', i:'#0f7b6c', q:'#e8411f'};
+    ctx.font = '12px Calibri, "Segoe UI", Arial, sans-serif';
+    ctx.strokeStyle = P.grid; ctx.lineWidth = 1; ctx.fillStyle = P.txt; ctx.textAlign = 'center';
+    for (var s = 0; s <= 10; s++){
+      var x = left + s / 10 * pw;
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, h - bottom); ctx.stroke();
+      if (s % 2 === 0) ctx.fillText((s - 10) + ' s', x, h - 6);
+    }
+    while (events.length > 1 && events[1].t <= t0) events.shift();
+    ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = P.edge; ctx.lineWidth = 1.3;
+    events.forEach(function(e){
+      if (!e.edge || e.t < t0) return;
+      ctx.beginPath(); ctx.moveTo(X(e.t), top); ctx.lineTo(X(e.t), h - bottom); ctx.stroke();
+    });
+    ctx.restore();
+    TR.forEach(function(tr, i){
+      var yHi = top + i * rowH + rowH * 0.3, yLo = top + i * rowH + rowH * 0.76;
+      if (i % 2 === 1){ ctx.fillStyle = dark ? 'rgba(255,255,255,0.035)' : 'rgba(30,60,120,0.045)'; ctx.fillRect(left, top + i * rowH, pw, rowH); }
+      var col = tr.f === 'C' ? P.c : (i === 1 ? P.i : P.q);
+      ctx.fillStyle = col; ctx.textAlign = 'left';
+      ctx.font = 'bold 13px Calibri, "Segoe UI", Arial, sans-serif';
+      ctx.fillText(tr.n, 4, (yHi + yLo) / 2 + 5);
+      if (i > 0){ ctx.strokeStyle = P.sep; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(left, top + i * rowH); ctx.lineTo(w - right, top + i * rowH); ctx.stroke(); }
+      if (!events.length) return;
+      ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.lineJoin = 'miter'; ctx.beginPath();
+      var v = events[0][tr.f];
+      ctx.moveTo(X(Math.max(events[0].t, t0)), v ? yHi : yLo);
+      for (var k = 1; k < events.length; k++){
+        var e = events[k]; if (e.t > tNow) break;
+        ctx.lineTo(X(e.t), v ? yHi : yLo); v = e[tr.f]; ctx.lineTo(X(e.t), v ? yHi : yLo);
+      }
+      ctx.lineTo(X(tNow), v ? yHi : yLo); ctx.stroke();
+    });
+    requestAnimationFrame(drawTiming);
+  }
+
+  /* ---------- αλληλεπίδραση ---------- */
+  function act(a){
+    if (a === 'sin'){ sin = 1 - sin; record(false); render(); }
+    else if (a === 'load'){ setLoad(1 - load); }
+    else if (a.charAt(0) === 'd'){ var i = +a.charAt(1); d[i] = 1 - d[i]; record(false); render(); }
+  }
+  var sch = $('sch');
+  sch.addEventListener('keydown', function(e){
+    var g = e.target.closest('[data-act]'); if (!g) return;
+    if (e.key === ' ' || e.key === 'Enter'){
+      e.preventDefault();
+      var a = g.getAttribute('data-act');
+      if (a === 'clr'){ if (!e.repeat) setClr(0); } else act(a);
+      setTimeout(function(){ var n = sch.querySelector('[data-act="' + a + '"]'); if (n) n.focus(); }, 0);
+    }
+  });
+  sch.addEventListener('keyup', function(e){
+    var g = e.target.closest('[data-act="clr"]');
+    if (g && (e.key === ' ' || e.key === 'Enter')) setClr(1);
+  });
+  // pointerdown (όχι click): το σχηματικό ξανασχεδιάζεται σε κάθε παλμό ρολογιού
+  sch.addEventListener('pointerdown', function(e){
+    var g = e.target.closest('[data-act]'); if (!g) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    var a = g.getAttribute('data-act');
+    if (a !== 'clr'){ e.preventDefault(); act(a); return; }
+    e.preventDefault(); setClr(0);
+    window.addEventListener('pointerup', function up(){ window.removeEventListener('pointerup', up); setClr(1); });
+  });
+  $('btnClr').addEventListener('pointerdown', function(e){
+    e.preventDefault(); setClr(0);
+    window.addEventListener('pointerup', function up(){ window.removeEventListener('pointerup', up); setClr(1); });
+  });
+  $('btnClr').addEventListener('keydown', function(e){ if ((e.key === ' ' || e.key === 'Enter') && !e.repeat){ e.preventDefault(); setClr(0); } });
+  $('btnClr').addEventListener('keyup', function(e){ if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); setClr(1); } });
+
+  var vb = $('btnVar');
+  if (vb){
+    vb.addEventListener('click', function(){
+      if (TYPE === 'siso'){
+        dirLeft = !dirLeft;
+        vb.textContent = dirLeft ? '⇄ Αριστερή ολίσθηση' : '⇄ Δεξιά ολίσθηση';
+        lastMsg = dirLeft ? 'Αριστερή ολίσθηση: τα δεδομένα μπαίνουν στο FF0 και βγαίνουν από το FF3 (πρώτα το MSB).'
+                          : 'Δεξιά ολίσθηση: τα δεδομένα μπαίνουν στο FF3 και βγαίνουν από το FF0.';
+      } else {
+        cyclic = !cyclic;
+        vb.textContent = cyclic ? '↻ Κυκλική ολίσθηση: ΝΑΙ' : '↻ Κυκλική ολίσθηση: ΟΧΙ';
+        vb.classList.toggle('on', cyclic);
+        lastMsg = cyclic ? 'Κυκλική ολίσθηση: η έξοδος Q0 τροφοδοτεί την είσοδο του FF3· η σειριακή είσοδος αποσυνδέεται.'
+                         : 'Η σειριακή είσοδος συνδέθηκε ξανά στο FF3.';
+      }
+      render();
+    });
+  }
+
+  /* ---------- ρολόι ---------- */
+  var autoClk = null, stepTimer = null;
+  function freq(){ return parseFloat($('freq').value); }
+  function fmtF(f){ return f.toFixed(1).replace('.', ',').replace(',0', '') + ' Hz'; }
+  function startClk(){
+    if (autoClk) clearInterval(autoClk);
+    autoClk = setInterval(function(){ setClk(1 - clk); }, 500 / freq());
+    $('btnRun').textContent = '⏸ Σταμάτημα'; $('btnRun').classList.remove('on');
+  }
+  function stopClk(){
+    if (autoClk){ clearInterval(autoClk); autoClk = null; }
+    $('btnRun').textContent = '▶ Εκκίνηση'; $('btnRun').classList.add('on');
+  }
+  $('btnRun').addEventListener('click', function(){ if (autoClk) stopClk(); else startClk(); });
+  $('freq').addEventListener('input', function(){ $('freqVal').textContent = fmtF(freq()); if (autoClk) startClk(); });
+  $('btnStep').addEventListener('click', function(){
+    stopClk();
+    if (stepTimer) return;
+    if (clk){ setClk(0); return; }
+    setClk(1);
+    stepTimer = setTimeout(function(){ stepTimer = null; setClk(0); }, 350);
+  });
+
+  $('btnPause').addEventListener('click', function(){
+    paused = !paused;
+    if (paused){ pausedAt = now(); this.textContent = '▶ Συνέχεια'; this.classList.add('on'); }
+    else { this.textContent = '⏸ Παύση'; this.classList.remove('on'); }
+  });
+  $('btnClear').addEventListener('click', function(){ events = []; record(false); });
+
+  /* ---------- θέμα ---------- */
+  function setTheme(dk){
+    dark = dk;
+    document.body.classList.toggle('dark', dk);
+    var bt = $('btnTheme');
+    bt.textContent = dk ? '☀️ Φωτεινό θέμα' : '🌙 Σκούρο θέμα';
+    bt.setAttribute('aria-pressed', dk ? 'true' : 'false');
+    try { localStorage.setItem('gateSimTheme', dk ? 'dark' : 'light'); } catch(e){}
+    $('backLink').href = 'index.html' + (dk ? '#dark' : '#light');
+  }
+  try { if (window.self !== window.top) document.body.classList.add('embedded'); }
+  catch(e){ document.body.classList.add('embedded'); }
+  $('btnTheme').addEventListener('click', function(){ setTheme(!dark); });
+  (function(){
+    var hsh = (location.hash || '').toLowerCase(), saved = null;
+    try { saved = localStorage.getItem('gateSimTheme'); } catch(e){}
+    if (hsh === '#dark') setTheme(true); else if (hsh === '#light') setTheme(false); else setTheme(saved === 'dark');
+  })();
+
+  addRow('Αρχή', '—', 'clr');
+  record(false); render(); resize();
+  startClk();
+  requestAnimationFrame(drawTiming);
+})();
+</script>
+</body>
+</html>

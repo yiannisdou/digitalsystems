@@ -30,11 +30,25 @@
     <h1>Προσομοιώσεις ψηφιακών συστημάτων</h1>
     <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
   </div>
-  <p>Διαδραστικές προσομοιώσεις κυκλωμάτων με μπουτόν στις εισόδους, LED στις εξόδους, καθυστέρηση πύλης σε αργή κίνηση και χρονοδιάγραμμα. Τεχνολογία CMOS (74HC).</p>
+  <p>Διαδραστικές προσομοιώσεις κυκλωμάτων με διακόπτες και μπουτόν στις εισόδους, LED στις εξόδους, ρολόι και χρονοδιάγραμμα. Τεχνολογία CMOS (74HC).</p>
   <h2>Μανταλωτές (μνήμη 1 bit)</h2>
   <div class="grid">
     <a class="card" href="sr_latch_nor.html"><div class="n">S-R με NOR</div><div class="eq">είσοδοι ενεργές στο 1</div><div class="c">74HC02</div></a>
     <a class="card" href="sr_latch_nand.html"><div class="n">S-R με NAND</div><div class="eq">είσοδοι ενεργές στο 0</div><div class="c">74HC00</div></a>
+  </div>
+  <h2 style="margin-top:28px">Flip-flop (ανερχόμενο μέτωπο)</h2>
+  <div class="grid">
+    <a class="card" href="ff_sr.html"><div class="n">Flip-flop SR</div><div class="eq">Q<sub>n+1</sub> = S + <span class="ov">R</span>·Q<sub>n</sub></div><div class="c">Θέση · Μηδενισμός · Αμετάβλητη</div></a>
+    <a class="card" href="ff_d.html"><div class="n">Flip-flop D</div><div class="eq">Q<sub>n+1</sub> = D</div><div class="c">π.χ. 74HC74</div></a>
+    <a class="card" href="ff_jk.html"><div class="n">Flip-flop JK</div><div class="eq">Q<sub>n+1</sub> = J·<span class="ov">Q</span><sub>n</sub> + <span class="ov">K</span>·Q<sub>n</sub></div><div class="c">+ Εναλλαγή με J = K = 1</div></a>
+    <a class="card" href="ff_t.html"><div class="n">Flip-flop T</div><div class="eq">Q<sub>n+1</sub> = T ⊕ Q<sub>n</sub></div><div class="c">Εναλλαγή · διαιρέτης με 2</div></a>
+  </div>
+  <h2 style="margin-top:28px">Καταχωρητές (4 bit, κατερχόμενο μέτωπο)</h2>
+  <div class="grid">
+    <a class="card" href="reg_siso.html"><div class="n">SISO</div><div class="eq">σειριακή είσοδος → σειριακή έξοδος</div><div class="c">δεξιά / αριστερή ολίσθηση</div></a>
+    <a class="card" href="reg_sipo.html"><div class="n">SIPO</div><div class="eq">σειριακή είσοδος → παράλληλη έξοδος</div><div class="c">και κυκλική ολίσθηση</div></a>
+    <a class="card" href="reg_piso.html"><div class="n">PISO</div><div class="eq">παράλληλη είσοδος → σειριακή έξοδος</div><div class="c">σύγχρονη φόρτωση</div></a>
+    <a class="card" href="reg_pipo.html"><div class="n">PIPO</div><div class="eq">παράλληλη είσοδος → παράλληλη έξοδος</div><div class="c">φόρτωση με πύλη AND</div></a>
   </div>
 </div>
 <script>

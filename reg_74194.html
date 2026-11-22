@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Προσομοίωση: Αμφίδρομος καταχωρητής ολίσθησης 74HC194</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1d2433; --muted:#5b6475;
+    --line:#d5dbe5; --hi:#e8411f; --accent:#0f7b6c; --w0:#8a94a6; --w1:#e8411f; --fl:#1e7bff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:Calibri,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1500px;height:100vh;margin:0 auto;padding:8px 12px;display:flex;flex-direction:column;gap:8px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .back{display:inline-block;color:var(--muted);text-decoration:none;font-size:.85rem}
+  .back:hover{color:var(--ink);text-decoration:underline}
+  body.embedded .back{display:none}
+  h1{font-size:1.3rem;margin:0}
+  h2{font-size:1rem;margin:0 0 4px}
+  .sub{color:var(--muted);margin:2px 0 0;font-size:.92rem;line-height:1.3}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+  .main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px;align-items:stretch}
+  .left{display:flex;flex-direction:column;min-height:0}
+  .left svg{flex:1;min-height:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-select:none}
+  .right{display:flex;flex-direction:column;gap:8px;min-height:0}
+  .tcard{flex:1;display:flex;flex-direction:column;min-height:0}
+  .tcard canvas{flex:1;min-height:120px;width:100%;display:block;border:1px solid var(--line);border-radius:8px;background:#fcfdfe}
+  .controls{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;margin-top:4px}
+  button{font:inherit;font-size:.9rem;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  button:hover{background:#f0f3f8}
+  button.on{background:#e7f4f1;border-color:var(--accent);font-weight:700}
+  .mode{min-width:9.2em}
+  #btnRun{min-width:7.6em} #btnPause{min-width:6.6em}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;color:var(--muted)}
+  .chk input[type=range]{width:100px}
+  #freqVal{color:var(--ink);min-width:3.4em}
+  .sep{width:1px;height:22px;background:var(--line)}
+  .status{text-align:center;font-size:.98rem;margin:4px 0 0;min-height:1.3em}
+  .status2{text-align:center;font-size:.9rem;margin:1px 0 0;color:var(--muted);min-height:1.3em}
+  .status2 b{color:var(--ink)}
+  .mono{font-family:Consolas,"Courier New",monospace;font-weight:700;letter-spacing:1px}
+  .ov{text-decoration:overline}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;text-align:center}
+  th,td{border:1px solid var(--line);padding:3px 5px}
+  th{background:#eef2f7}
+  td.l{text-align:left}
+  tr.active td{background:#fff3c4;font-weight:700}
+  .legend{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px}
+  .legend button{padding:2px 8px;font-size:.85rem}
+  .small{font-size:.82rem;color:var(--muted);font-weight:400}
+  .dash{color:var(--fl);font-weight:700;letter-spacing:-1px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+  summary{cursor:pointer;font-weight:700}
+  details p{color:var(--muted);font-size:.93rem;line-height:1.4;margin:6px 0}
+  details b{color:var(--ink)}
+  @media (max-width:1000px){
+    .wrap{height:auto}
+    .main{grid-template-columns:1fr}
+    .left svg{height:auto;flex:none}
+    .tcard canvas{height:240px;flex:none}
+  }
+
+  /* SVG */
+  .wire{fill:none;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}
+  .w0{stroke:var(--w0)} .w1{stroke:var(--w1)}
+  .ic{fill:var(--card);stroke:var(--ink);stroke-width:3.5}
+  .ink{stroke:var(--ink);fill:none;stroke-width:2.5}
+  .inkf{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
+  .cell{fill:var(--card);stroke:var(--ink);stroke-width:2}
+  .cell.fl{stroke:var(--fl);stroke-width:4}
+  .t{fill:var(--ink);font-weight:700}
+  .tm{fill:var(--muted)}
+  .ta{fill:var(--accent);font-weight:700}
+  .v0{fill:var(--w0);font-weight:700} .v1{fill:var(--w1);font-weight:700}
+  .tg{cursor:pointer}
+  .tg rect{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
+  .tg.on rect{fill:#ffe1d6;stroke:var(--w1)}
+  .tg:hover rect{stroke-width:3.5}
+  .tg:focus{outline:none}
+  .tg:focus-visible rect{stroke:var(--accent);stroke-dasharray:4 3}
+  .lamp0{fill:#e9ecf1;stroke:var(--ink);stroke-width:2}
+  .lamp1{fill:#ff4b1f;stroke:var(--ink);stroke-width:2}
+  .halo{fill:url(#glow)}
+
+  /* Σκούρο θέμα */
+  body.dark{--bg:#0d1219;--card:#161e2b;--ink:#e6ebf2;--muted:#9aa6b8;--line:#2c3a4f;--w0:#6b778b;--w1:#ff6a3d;--fl:#3d9bff;--accent:#2fc4a8}
+  body.dark button{background:#202c3f;color:var(--ink)}
+  body.dark button:hover{background:#2a3a55}
+  body.dark button.on{background:#123a33;border-color:#2fc4a8}
+  body.dark th{background:#202c3f}
+  body.dark tr.active td{background:#4a3b10;color:#ffe08a}
+  body.dark .tcard canvas{background:#101824}
+  body.dark .tg.on rect{fill:#4a2a24}
+  body.dark .lamp0{fill:#2a3342}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <a id="backLink" class="back" href="index.html">← Όλες οι προσομοιώσεις</a>
+      <h1>Αμφίδρομος καταχωρητής ολίσθησης 4 bit 74HC194</h1>
+      <p class="sub">Διάλεξε λειτουργία με τα S1, S0 (ή τα κουμπιά), άλλαξε τις εισόδους με κλικ στα κουτάκια 0/1 και παρακολούθησε τις εξόδους QA–QD σε κάθε ανερχόμενο μέτωπο του ρολογιού.</p>
+    </div>
+    <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
+  </div>
+
+  <div class="main">
+    <div class="card left">
+      <svg id="sch" viewBox="0 0 760 440" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Ολοκληρωμένο 74HC194 σε περίβλημα DIP-16 με τους ακροδέκτες στις πραγματικές τους θέσεις: επάνω 16 έως 9 (Vcc, QA έως QD, CLOCK, S1, S0), κάτω 1 έως 8 (CLEAR, SR, A έως D, SL, GND)"></svg>
+      <div class="controls">
+        <button class="mode" type="button" data-m="00">Αμετάβλητη (00)</button>
+        <button class="mode" type="button" data-m="01">Δεξιά ολίσθηση (01)</button>
+        <button class="mode" type="button" data-m="10">Αριστερή ολίσθηση (10)</button>
+        <button class="mode" type="button" data-m="11">Φόρτωση (11)</button>
+      </div>
+      <div class="controls">
+        <label class="chk" for="freq">CLK
+          <input type="range" id="freq" min="0.2" max="2" step="0.1" value="0.5">
+          <b id="freqVal">0,5 Hz</b>
+        </label>
+        <button id="btnRun" type="button">⏸ Σταμάτημα</button>
+        <button id="btnStep" type="button" title="Δίνει έναν παλμό ρολογιού (το ρολόι σταματά)">⏭ Ένας παλμός</button>
+      </div>
+      <p class="status" id="status"></p>
+      <p class="status2" id="status2"></p>
+    </div>
+
+    <div class="right">
+      <div class="card">
+        <h2>Πίνακας λειτουργίας</h2>
+        <table id="ft">
+          <thead><tr><th><span class="ov">CLR</span></th><th>S1</th><th>S0</th><th>CLK</th><th>Λειτουργία</th></tr></thead>
+          <tbody>
+            <tr data-m="clr"><td>0</td><td>×</td><td>×</td><td>×</td><td class="l">Μηδενισμός: QA–QD = 0</td></tr>
+            <tr data-m="00"><td>1</td><td>0</td><td>0</td><td>×</td><td class="l">Αμετάβλητη</td></tr>
+            <tr data-m="01"><td>1</td><td>0</td><td>1</td><td>↑</td><td class="l">Δεξιά ολίσθηση: SR → QA → … → QD</td></tr>
+            <tr data-m="10"><td>1</td><td>1</td><td>0</td><td>↑</td><td class="l">Αριστερή ολίσθηση: QA ← … ← QD ← SL</td></tr>
+            <tr data-m="11"><td>1</td><td>1</td><td>1</td><td>↑</td><td class="l">Παράλληλη φόρτωση: QA–QD ← A–D</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card tcard">
+        <div class="legend">
+          <h2 style="margin:0">Χρονοδιάγραμμα <span class="small">(10 s · <span class="dash">- - -</span> ↑ μέτωπο)</span></h2>
+          <div style="display:flex;gap:6px">
+            <button id="btnPause" type="button">⏸ Παύση</button>
+            <button id="btnClear" type="button">Καθαρισμός</button>
+          </div>
+        </div>
+        <canvas id="timing" aria-label="Χρονοδιάγραμμα του ρολογιού, των S1, S0 και των εξόδων QA έως QD"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Πώς λειτουργεί</summary>
+    <p>Το <b>74HC194</b> είναι ένας <b>αμφίδρομος καταχωρητής ολίσθησης 4 bit</b> σε ένα ολοκληρωμένο. Περιέχει τέσσερα flip-flop (QA–QD) με κοινό ρολόι και, ανάλογα με τις εισόδους επιλογής <b>S1, S0</b>, λειτουργεί ως καταχωρητής δεξιάς ολίσθησης, αριστερής ολίσθησης, παράλληλης φόρτωσης ή απλώς κρατά την πληροφορία. Γι' αυτό λέγεται και «γενικής χρήσης» (universal).</p>
+    <p>Όλες οι αλλαγές γίνονται <b>σύγχρονα</b>, στο <b>ανερχόμενο μέτωπο</b> του ρολογιού. Με S1 S0 = 01 τα bit πηγαίνουν από το QA προς το QD και το νέο bit μπαίνει από τη σειριακή είσοδο <b>SR</b>. Με 10 πηγαίνουν από το QD προς το QA και το νέο bit μπαίνει από την <b>SL</b>. Με 11 φορτώνονται ταυτόχρονα τα A–D.</p>
+    <p>Η είσοδος <b><span class="ov">CLR</span></b> είναι <b>ενεργή στο 0</b> και <b>ασύγχρονη</b>: μόλις γίνει 0, όλες οι έξοδοι μηδενίζονται αμέσως, χωρίς να περιμένει το ρολόι. Στην κανονική λειτουργία πρέπει να είναι 1.</p>
+    <p>Δοκίμασε: φόρτωσε έναν αριθμό (π.χ. A–D = 1000) με S1 S0 = 11, και μετά γύρνα σε 01 ή 10 για να δεις το bit να «ταξιδεύει» δεξιά ή αριστερά. Αν συνδέσεις νοερά το QD στο SR, έχεις κυκλική ολίσθηση.</p>
+  </details>
+</div>
+
+<script>
+(function(){
+  var q = {A:0, B:0, C:0, D:0};        // περιεχόμενο QA–QD
+  var d = {A:0, B:0, C:0, D:0};        // παράλληλες είσοδοι
+  var clr = 1, s1 = 0, s0 = 0, sr = 0, sl = 0, clk = 0;
+  var pulses = 0, lastMsg = '', flashUntil = 0, dark = false;
+  var L = ['A','B','C','D'];
+
+  function $(id){ return document.getElementById(id); }
+  function bits(){ return '' + q.A + q.B + q.C + q.D; }
+  function mode(){ return clr ? ('' + s1 + s0) : 'clr'; }
+  var MODE_NAME = {clr:'Μηδενισμός', '00':'Αμετάβλητη', '01':'Δεξιά ολίσθηση', '10':'Αριστερή ολίσθηση', '11':'Παράλληλη φόρτωση'};
+
+  /* ---------- σχεδίαση: περίβλημα DIP-16, όπως το πραγματικό ολοκληρωμένο ---------- */
+  var PX = [110, 186, 262, 338, 414, 490, 566, 642];       // θέσεις ακροδεκτών (αριστερά → δεξιά)
+  var BT = 160, BB = 300;                                   // πάνω / κάτω πλευρά περιβλήματος
+  function W(pts, v){ return '<polyline class="wire ' + (v ? 'w1' : 'w0') + '" points="' + pts + '"/>'; }
+  function T(x, y, s, size, cls, anchor){ return '<text x="' + x + '" y="' + y + '" font-size="' + size + '" class="' + (cls || 't') + '" text-anchor="' + (anchor || 'middle') + '">' + s + '</text>'; }
+  function ovText(x, y, s, size, cls){
+    var w = 0.6 * size * s.length, x0 = x - w / 2;
+    return T(x, y, s, size, cls) + '<line x1="' + x0 + '" y1="' + (y - size * 0.82) + '" x2="' + (x0 + w) + '" y2="' + (y - size * 0.82) + '" class="ink" style="stroke-width:1.5"/>';
+  }
+  function toggle(x, y, v, act, label){
+    return '<g class="tg' + (v ? ' on' : '') + '" data-act="' + act + '" tabindex="0" role="switch" aria-checked="' + (v ? 'true' : 'false') + '" aria-label="' + label + '">' +
+      '<rect x="' + (x - 19) + '" y="' + y + '" width="38" height="30" rx="6"/>' + T(x, y + 23, v, 22, v ? 'v1' : 'v0') + '</g>';
+  }
+  function lamp(x, y, v, name){
+    var s = v ? '<circle class="halo" cx="' + x + '" cy="' + y + '" r="26"/>' : '';
+    return s + '<circle class="' + (v ? 'lamp1' : 'lamp0') + '" cx="' + x + '" cy="' + y + '" r="12"/>' +
+      T(x, y - 20, name, 15) + T(x + 20, y + 9, v, 24, v ? 'v1' : 'v0', 'start');
+  }
+  function pinTop(i, n){ return '<line x1="' + PX[i] + '" y1="' + (BT - 20) + '" x2="' + PX[i] + '" y2="' + BT + '" class="ink" style="stroke-width:5"/>' + T(PX[i] + 7, BT - 6, n, 12, 'tm', 'start'); }
+  function pinBot(i, n){ return '<line x1="' + PX[i] + '" y1="' + BB + '" x2="' + PX[i] + '" y2="' + (BB + 20) + '" class="ink" style="stroke-width:5"/>' + T(PX[i] + 7, BB + 16, n, 12, 'tm', 'start'); }
+
+  function draw(){
+    var s = '<defs><radialGradient id="glow" cx="50%" cy="50%" r="50%">' +
+      '<stop offset="0%" stop-color="#ff5a2a" stop-opacity=".7"/><stop offset="60%" stop-color="#ff5a2a" stop-opacity=".18"/>' +
+      '<stop offset="100%" stop-color="#ff5a2a" stop-opacity="0"/></radialGradient>' +
+      '<g id="gnd"><line x1="-12" y1="0" x2="12" y2="0" stroke="currentColor" stroke-width="2.5"/><line x1="-8" y1="5" x2="8" y2="5" stroke="currentColor" stroke-width="2.5"/><line x1="-3" y1="10" x2="3" y2="10" stroke="currentColor" stroke-width="2.5"/></g></defs>';
+    var m = mode();
+
+    /* ===== επάνω σειρά: 16 Vcc · 15–12 QA–QD · 11 CLOCK · 10 S1 · 9 S0 ===== */
+    s += '<line x1="' + PX[0] + '" y1="100" x2="' + PX[0] + '" y2="' + (BT - 20) + '" class="wire w1"/>' + T(PX[0], 92, '+5 V', 15, 'v1');
+    ['A','B','C','D'].forEach(function(k, j){
+      var x = PX[1 + j];
+      s += W(x + ',' + (BT - 20) + ' ' + x + ',92', q[k]) + lamp(x, 80, q[k], 'Q' + k);
+    });
+    s += '<path class="ink" style="stroke-width:1.5" d="M' + (PX[1] - 10) + ',38 v-6 h' + (PX[4] - PX[1] + 20) + ' v6"/>' + T((PX[1] + PX[4]) / 2, 24, 'έξοδοι', 13, 'tm');
+    // ρολόι
+    s += W(PX[5] + ',97 ' + PX[5] + ',' + (BT - 20), clk);
+    s += '<circle class="inkf" cx="' + PX[5] + '" cy="80" r="17"/><path class="ink" d="M' + (PX[5] - 10) + ',85 h4 v-10 h6 v10 h6 v-10 h4"/>';
+    s += T(PX[5], 52, 'CLK', 15) + T(PX[5], 36, 'ρολόι', 12, 'tm');
+    s += W(PX[6] + ',95 ' + PX[6] + ',' + (BT - 20), s1) + toggle(PX[6], 65, s1, 's1', 'S1') + T(PX[6], 57, 'S1', 15);
+    s += W(PX[7] + ',95 ' + PX[7] + ',' + (BT - 20), s0) + toggle(PX[7], 65, s0, 's0', 'S0') + T(PX[7], 57, 'S0', 15);
+    s += T((PX[6] + PX[7]) / 2, 36, 'επιλογή λειτουργίας', 12, 'tm');
+
+    /* ===== κάτω σειρά: 1 CLEAR · 2 SR · 3–6 A–D · 7 SL · 8 GND ===== */
+    s += W(PX[0] + ',' + (BB + 20) + ' ' + PX[0] + ',345', clr) + toggle(PX[0], 345, clr, 'clr', 'CLEAR (CLR αρνημένο)');
+    s += ovText(PX[0], 393, 'CLR', 15) + T(PX[0], 409, 'μηδενισμός', 12, 'tm');
+    s += W(PX[1] + ',' + (BB + 20) + ' ' + PX[1] + ',345', sr) + toggle(PX[1], 345, sr, 'sr', 'SR');
+    s += T(PX[1], 393, 'SR', 15) + T(PX[1], 409, 'σειρ. δεξιάς', 12, 'tm');
+    ['A','B','C','D'].forEach(function(k, j){
+      var x = PX[2 + j];
+      s += W(x + ',' + (BB + 20) + ' ' + x + ',345', d[k]) + toggle(x, 345, d[k], 'd' + k, k) + T(x, 393, k, 15);
+    });
+    s += '<path class="ink" style="stroke-width:1.5" d="M' + (PX[2] - 10) + ',402 v6 h' + (PX[5] - PX[2] + 20) + ' v-6"/>' + T((PX[2] + PX[5]) / 2, 424, 'παράλληλες είσοδοι', 13, 'tm');
+    s += W(PX[6] + ',' + (BB + 20) + ' ' + PX[6] + ',345', sl) + toggle(PX[6], 345, sl, 'sl', 'SL');
+    s += T(PX[6], 393, 'SL', 15) + T(PX[6], 409, 'σειρ. αριστερής', 12, 'tm');
+    s += '<line x1="' + PX[7] + '" y1="' + (BB + 20) + '" x2="' + PX[7] + '" y2="340" class="wire w0"/><use href="#gnd" x="' + PX[7] + '" y="340" style="color:var(--ink)"/>';
+
+    /* ===== περίβλημα ===== */
+    for (var i = 0; i < 8; i++){ s += pinTop(i, 16 - i) + pinBot(i, i + 1); }
+    s += '<rect class="ic" x="70" y="' + BT + '" width="620" height="' + (BB - BT) + '" rx="5"/>';
+    s += '<path class="inkf" d="M70,' + ((BT + BB) / 2 - 13) + ' a13,13 0 0 1 0,26"/>';             // εγκοπή
+    var topN = ['V<tspan font-size="9" dy="3">CC</tspan>', 'QA', 'QB', 'QC', 'QD', 'CLK', 'S1', 'S0'];
+    topN.forEach(function(n, i){ s += T(PX[i], 190, n, 13); });
+    s += '<path class="ink" d="M' + (PX[5] - 9) + ',' + BT + ' L' + PX[5] + ',' + (BT + 11) + ' L' + (PX[5] + 9) + ',' + BT + '"/>';  // ακροδέκτης ρολογιού
+    s += '<circle class="inkf" cx="' + PX[0] + '" cy="' + (BB - 6) + '" r="5"/>';                    // άρνηση στο CLEAR
+    s += ovText(PX[0], 280, 'CLR', 13);
+    ['SR','A','B','C','D','SL','GND'].forEach(function(n, i){ s += T(PX[i + 1], 280, n, 13); });
+    s += T(625, 232, '74HC194', 17, 't', 'end');
+
+    // εσωτερικό: τα 4 flip-flop και η λειτουργία
+    var fl = performance.now() < flashUntil ? ' fl' : '';
+    ['A','B','C','D'].forEach(function(k, j){
+      var x = 200 + j * 44;
+      s += '<rect class="cell' + fl + '" x="' + x + '" y="205" width="40" height="38" rx="4"/>';
+      s += T(x + 20, 233, q[k], 24, q[k] ? 'v1' : 'v0');
+    });
+    var arrow = {clr:'όλα → 0', '00':'καμία αλλαγή', '01':'SR → QA → QB → QC → QD', '10':'QA ← QB ← QC ← QD ← SL', '11':'A B C D → QA QB QC QD'}[m];
+    s += T(388, 220, arrow, 13, 'ta', 'start');
+    s += T(388, 240, 'S1 S0 = ' + s1 + s0 + ' · ' + MODE_NAME[m], 13, 't', 'start');
+    s += T(286, 258, 'QA   QB   QC   QD', 11, 'tm');
+    $('sch').innerHTML = s;
+  }
+
+  /* ---------- λειτουργία ---------- */
+  function risingEdge(){
+    var before = bits(), m = mode(), what = MODE_NAME[m];
+    if (m === 'clr' || m === '00'){
+      lastMsg = '<b>↑ Μέτωπο:</b> ' + (m === 'clr' ? 'ο μηδενισμός είναι ενεργός (CLR = 0)' : 'αμετάβλητη — καμία αλλαγή') + ' &mdash; <span class="mono">' + before + '</span>';
+      return;
+    }
+    if (m === '01') q = {A: sr, B: q.A, C: q.B, D: q.C};
+    else if (m === '10') q = {A: q.B, B: q.C, C: q.D, D: sl};
+    else q = {A: d.A, B: d.B, C: d.C, D: d.D};
+    pulses++;
+    flashUntil = performance.now() + 380; setTimeout(draw, 400);
+    var extra = m === '01' ? ' (μπήκε SR = ' + sr + ')' : (m === '10' ? ' (μπήκε SL = ' + sl + ')' : '');
+    lastMsg = '<b>↑ Παλμός ' + pulses + ':</b> ' + what + extra + ' &mdash; <span class="mono">' + before + '</span> &rarr; <span class="mono">' + bits() + '</span>';
+  }
+  function setClk(v){
+    if (v === clk) return;
+    clk = v;
+    var edge = clk === 1;
+    if (edge) risingEdge();
+    record(edge && clr === 1); render();
+  }
+  function setClr(v){
+    clr = v;
+    if (!clr){ q = {A:0, B:0, C:0, D:0}; pulses = 0; lastMsg = '<b><span class="ov">CLR</span> = 0:</b> ασύγχρονος μηδενισμός &rarr; <span class="mono">0000</span>'; }
+    else lastMsg = '<b><span class="ov">CLR</span> = 1:</b> ο καταχωρητής λειτουργεί κανονικά';
+    record(false); render();
+  }
+  function setMode(a, b){ s1 = a; s0 = b; record(false); render(); }
+
+  function render(){
+    draw();
+    var m = mode();
+    $('status').innerHTML = 'Λειτουργία: <b>' + MODE_NAME[m] + '</b> &nbsp;·&nbsp; QA QB QC QD = <span class="mono">' + bits() + '</span> &nbsp;·&nbsp; CLK = ' + clk;
+    $('status2').innerHTML = lastMsg || 'Αναμονή για ανερχόμενο μέτωπο του ρολογιού (από 0 σε 1).';
+    var rows = document.querySelectorAll('#ft tbody tr');
+    for (var i = 0; i < rows.length; i++) rows[i].className = rows[i].getAttribute('data-m') === m ? 'active' : '';
+    var mb = document.querySelectorAll('button.mode');
+    for (var j = 0; j < mb.length; j++) mb[j].classList.toggle('on', mb[j].getAttribute('data-m') === ('' + s1 + s0));
+  }
+
+  /* ---------- χρονοδιάγραμμα ---------- */
+  var WINDOW = 10000, events = [], paused = false, pausedAt = 0;
+  var TR = [{n:'CLK', f:'C'}, {n:'S1', f:'S1'}, {n:'S0', f:'S0'}, {n:'QA', f:'A'}, {n:'QB', f:'B'}, {n:'QC', f:'C2'}, {n:'QD', f:'D'}];
+  function now(){ return performance.now(); }
+  function record(edge){ events.push({t: now(), C: clk, S1: s1, S0: s0, A: q.A, B: q.B, C2: q.C, D: q.D, edge: !!edge}); }
+  var cv = $('timing'), ctx = cv.getContext('2d');
+  function resize(){
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(cv.clientWidth * dpr); cv.height = Math.round(cv.clientHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(cv); else window.addEventListener('resize', resize);
+  function drawTiming(){
+    var w = cv.clientWidth, h = cv.clientHeight;
+    var tNow = paused ? pausedAt : now(), t0 = tNow - WINDOW;
+    var left = 40, right = 8, top = 6, bottom = 20, pw = w - left - right;
+    var rowH = (h - top - bottom) / TR.length;
+    function X(t){ return left + (t - t0) / WINDOW * pw; }
+    ctx.clearRect(0, 0, w, h);
+    var P = dark ? {grid:'#253246', sep:'#2c3a4f', txt:'#9aa6b8', edge:'#3d9bff', c:'#c58cff', s:'#2fc4a8', q:'#ff6a3d', band:'rgba(255,255,255,0.035)'}
+                 : {grid:'#e6eaf0', sep:'#d5dbe5', txt:'#5b6475', edge:'#1e7bff', c:'#7c3aed', s:'#0f7b6c', q:'#e8411f', band:'rgba(30,60,120,0.045)'};
+    for (var b = 1; b < TR.length; b += 2){ ctx.fillStyle = P.band; ctx.fillRect(left, top + b * rowH, pw, rowH); }
+    ctx.font = '11px Calibri, "Segoe UI", Arial, sans-serif';
+    ctx.strokeStyle = P.grid; ctx.lineWidth = 1; ctx.fillStyle = P.txt; ctx.textAlign = 'center';
+    for (var s = 0; s <= 10; s++){
+      var x = left + s / 10 * pw;
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, h - bottom); ctx.stroke();
+      if (s % 2 === 0) ctx.fillText((s - 10) + ' s', x, h - 5);
+    }
+    while (events.length > 1 && events[1].t <= t0) events.shift();
+    ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = P.edge; ctx.lineWidth = 1.2;
+    events.forEach(function(e){
+      if (!e.edge || e.t < t0) return;
+      ctx.beginPath(); ctx.moveTo(X(e.t), top); ctx.lineTo(X(e.t), h - bottom); ctx.stroke();
+    });
+    ctx.restore();
+    TR.forEach(function(tr, i){
+      var yHi = top + i * rowH + rowH * 0.28, yLo = top + i * rowH + rowH * 0.78;
+      var col = i === 0 ? P.c : (i < 3 ? P.s : P.q);
+      ctx.fillStyle = col; ctx.textAlign = 'left';
+      ctx.font = 'bold 12px Calibri, "Segoe UI", Arial, sans-serif';
+      ctx.fillText(tr.n, 4, (yHi + yLo) / 2 + 4);
+      if (i > 0){ ctx.strokeStyle = P.sep; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(left, top + i * rowH); ctx.lineTo(w - right, top + i * rowH); ctx.stroke(); }
+      if (!events.length) return;
+      ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.lineJoin = 'miter'; ctx.beginPath();
+      var v = events[0][tr.f];
+      ctx.moveTo(X(Math.max(events[0].t, t0)), v ? yHi : yLo);
+      for (var k = 1; k < events.length; k++){
+        var e = events[k]; if (e.t > tNow) break;
+        ctx.lineTo(X(e.t), v ? yHi : yLo); v = e[tr.f]; ctx.lineTo(X(e.t), v ? yHi : yLo);
+      }
+      ctx.lineTo(X(tNow), v ? yHi : yLo); ctx.stroke();
+    });
+    requestAnimationFrame(drawTiming);
+  }
+
+  /* ---------- αλληλεπίδραση ---------- */
+  function act(a){
+    if (a === 'clr') setClr(1 - clr);
+    else if (a === 's1') setMode(1 - s1, s0);
+    else if (a === 's0') setMode(s1, 1 - s0);
+    else if (a === 'sr'){ sr = 1 - sr; record(false); render(); }
+    else if (a === 'sl'){ sl = 1 - sl; record(false); render(); }
+    else if (a.charAt(0) === 'd'){ var k = a.charAt(1); d[k] = 1 - d[k]; record(false); render(); }
+  }
+  var sch = $('sch');
+  // pointerdown (όχι click): το σχηματικό ξανασχεδιάζεται σε κάθε παλμό
+  sch.addEventListener('pointerdown', function(e){
+    var g = e.target.closest('[data-act]'); if (!g) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault(); act(g.getAttribute('data-act'));
+  });
+  sch.addEventListener('keydown', function(e){
+    var g = e.target.closest('[data-act]'); if (!g) return;
+    if (e.key === ' ' || e.key === 'Enter'){
+      e.preventDefault();
+      var a = g.getAttribute('data-act'); act(a);
+      var n = sch.querySelector('[data-act="' + a + '"]'); if (n) n.focus();
+    }
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('button.mode'), function(b){
+    b.addEventListener('click', function(){ var m = b.getAttribute('data-m'); setMode(+m.charAt(0), +m.charAt(1)); });
+  });
+
+  /* ---------- ρολόι ---------- */
+  var autoClk = null, stepTimer = null;
+  function freq(){ return parseFloat($('freq').value); }
+  function fmtF(f){ return f.toFixed(1).replace('.', ',').replace(',0', '') + ' Hz'; }
+  function startClk(){
+    if (autoClk) clearInterval(autoClk);
+    autoClk = setInterval(function(){ setClk(1 - clk); }, 500 / freq());
+    $('btnRun').textContent = '⏸ Σταμάτημα'; $('btnRun').classList.remove('on');
+  }
+  function stopClk(){
+    if (autoClk){ clearInterval(autoClk); autoClk = null; }
+    $('btnRun').textContent = '▶ Εκκίνηση'; $('btnRun').classList.add('on');
+  }
+  $('btnRun').addEventListener('click', function(){ if (autoClk) stopClk(); else startClk(); });
+  $('freq').addEventListener('input', function(){ $('freqVal').textContent = fmtF(freq()); if (autoClk) startClk(); });
+  $('btnStep').addEventListener('click', function(){
+    stopClk();
+    if (stepTimer) return;
+    if (clk) setClk(0);
+    setClk(1);
+    stepTimer = setTimeout(function(){ stepTimer = null; setClk(0); }, 350);
+  });
+  $('btnPause').addEventListener('click', function(){
+    paused = !paused;
+    if (paused){ pausedAt = now(); this.textContent = '▶ Συνέχεια'; this.classList.add('on'); }
+    else { this.textContent = '⏸ Παύση'; this.classList.remove('on'); }
+  });
+  $('btnClear').addEventListener('click', function(){ events = []; record(false); });
+
+  /* ---------- θέμα ---------- */
+  function setTheme(dk){
+    dark = dk;
+    document.body.classList.toggle('dark', dk);
+    var bt = $('btnTheme');
+    bt.textContent = dk ? '☀️ Φωτεινό θέμα' : '🌙 Σκούρο θέμα';
+    bt.setAttribute('aria-pressed', dk ? 'true' : 'false');
+    try { localStorage.setItem('gateSimTheme', dk ? 'dark' : 'light'); } catch(e){}
+    $('backLink').href = 'index.html' + (dk ? '#dark' : '#light');
+  }
+  try { if (window.self !== window.top) document.body.classList.add('embedded'); }
+  catch(e){ document.body.classList.add('embedded'); }
+  $('btnTheme').addEventListener('click', function(){ setTheme(!dark); });
+  (function(){
+    var hsh = (location.hash || '').toLowerCase(), saved = null;
+    try { saved = localStorage.getItem('gateSimTheme'); } catch(e){}
+    if (hsh === '#dark') setTheme(true); else if (hsh === '#light') setTheme(false); else setTheme(saved === 'dark');
+  })();
+
+  record(false); render(); resize();
+  startClk();
+  requestAnimationFrame(drawTiming);
+})();
+</script>
+</body>
+</html>

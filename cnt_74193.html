@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Προσομοίωση: Σύγχρονος απαριθμητής προς τα πάνω / κάτω 74HC193</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1d2433; --muted:#5b6475;
+    --line:#d5dbe5; --hi:#e8411f; --accent:#0f7b6c; --w0:#8a94a6; --w1:#e8411f; --fl:#1e7bff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:Calibri,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1500px;height:100vh;margin:0 auto;padding:8px 12px;display:flex;flex-direction:column;gap:8px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .back{display:inline-block;color:var(--muted);text-decoration:none;font-size:.85rem}
+  .back:hover{color:var(--ink);text-decoration:underline}
+  body.embedded .back{display:none}
+  h1{font-size:1.3rem;margin:0}
+  h2{font-size:1rem;margin:0 0 4px}
+  .sub{color:var(--muted);margin:2px 0 0;font-size:.92rem;line-height:1.3}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+  .main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px;align-items:stretch}
+  .left{display:flex;flex-direction:column;min-height:0}
+  .left svg{flex:1;min-height:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-select:none}
+  .right{display:flex;flex-direction:column;gap:8px;min-height:0}
+  .tcard{flex:1;display:flex;flex-direction:column;min-height:0}
+  .tcard canvas{flex:1;min-height:120px;width:100%;display:block;border:1px solid var(--line);border-radius:8px;background:#fcfdfe}
+  .controls{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;margin-top:4px}
+  button{font:inherit;font-size:.9rem;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  button:hover{background:#f0f3f8}
+  button.on{background:#e7f4f1;border-color:var(--accent);font-weight:700}
+  .mode{min-width:9.2em}
+  #btnRun{min-width:7.6em} #btnPause{min-width:6.6em}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;color:var(--muted)}
+  .chk input[type=range]{width:100px}
+  #freqVal{color:var(--ink);min-width:3.4em}
+  .sep{width:1px;height:22px;background:var(--line)}
+  .status{text-align:center;font-size:.98rem;margin:4px 0 0;min-height:1.3em}
+  .status2{text-align:center;font-size:.9rem;margin:1px 0 0;color:var(--muted);min-height:1.3em}
+  .status2 b{color:var(--ink)}
+  .mono{font-family:Consolas,"Courier New",monospace;font-weight:700;letter-spacing:1px}
+  .ov{text-decoration:overline}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;text-align:center}
+  th,td{border:1px solid var(--line);padding:3px 5px}
+  th{background:#eef2f7}
+  td.l{text-align:left}
+  tr.active td{background:#fff3c4;font-weight:700}
+  .legend{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px}
+  .legend button{padding:2px 8px;font-size:.85rem}
+  .small{font-size:.82rem;color:var(--muted);font-weight:400}
+  .dash{color:var(--fl);font-weight:700;letter-spacing:-1px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+  summary{cursor:pointer;font-weight:700}
+  details p{color:var(--muted);font-size:.93rem;line-height:1.4;margin:6px 0}
+  details b{color:var(--ink)}
+  @media (max-width:1000px){
+    .wrap{height:auto}
+    .main{grid-template-columns:1fr}
+    .left svg{height:auto;flex:none}
+    .tcard canvas{height:240px;flex:none}
+  }
+
+  /* SVG */
+  .wire{fill:none;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}
+  .w0{stroke:var(--w0)} .w1{stroke:var(--w1)}
+  .ic{fill:var(--card);stroke:var(--ink);stroke-width:3.5}
+  .ink{stroke:var(--ink);fill:none;stroke-width:2.5}
+  .inkf{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
+  .cell{fill:var(--card);stroke:var(--ink);stroke-width:2}
+  .cell.fl{stroke:var(--fl);stroke-width:4}
+  .t{fill:var(--ink);font-weight:700}
+  .tm{fill:var(--muted)}
+  .ta{fill:var(--accent);font-weight:700}
+  .v0{fill:var(--w0);font-weight:700} .v1{fill:var(--w1);font-weight:700}
+  .tg{cursor:pointer}
+  .tg rect{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
+  .tg.on rect{fill:#ffe1d6;stroke:var(--w1)}
+  .tg:hover rect{stroke-width:3.5}
+  .tg:focus{outline:none}
+  .tg:focus-visible rect{stroke:var(--accent);stroke-dasharray:4 3}
+  .lamp0{fill:#e9ecf1;stroke:var(--ink);stroke-width:2}
+  .lamp1{fill:#ff4b1f;stroke:var(--ink);stroke-width:2}
+  .halo{fill:url(#glow)}
+
+  /* Σκούρο θέμα */
+  body.dark{--bg:#0d1219;--card:#161e2b;--ink:#e6ebf2;--muted:#9aa6b8;--line:#2c3a4f;--w0:#6b778b;--w1:#ff6a3d;--fl:#3d9bff;--accent:#2fc4a8}
+  body.dark button{background:#202c3f;color:var(--ink)}
+  body.dark button:hover{background:#2a3a55}
+  body.dark button.on{background:#123a33;border-color:#2fc4a8}
+  body.dark th{background:#202c3f}
+  body.dark tr.active td{background:#4a3b10;color:#ffe08a}
+  body.dark .tcard canvas{background:#101824}
+  body.dark .tg.on rect{fill:#4a2a24}
+  body.dark .lamp0{fill:#2a3342}
+</style>
+<style>
+  .count{display:flex;align-items:baseline;gap:14px;justify-content:center;margin:2px 0 6px}
+  .count .dec{font-size:2.3rem;font-weight:700;color:var(--hi);min-width:1.6em;text-align:right;line-height:1}
+  .count .bin{font-family:Consolas,"Courier New",monospace;font-size:1.5rem;font-weight:700;letter-spacing:3px}
+  .count .lbl{font-size:.82rem;color:var(--muted)}
+  .count.ripple .dec{color:var(--fl)}
+  .states{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .states table{font-size:.85rem}
+  .states td,.states th{padding:1px 4px}
+  .states td.b{font-family:Consolas,"Courier New",monospace;letter-spacing:2px}
+  tr.trans td{background:#dbe9ff;font-weight:700}
+  body.dark tr.trans td{background:#1d3557;color:#b9d6ff}
+  .chk2{display:inline-flex;align-items:center;gap:5px;font-size:.9rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <a id="backLink" class="back" href="index.html">← Όλες οι προσομοιώσεις</a>
+      <h1>Σύγχρονος απαριθμητής 4 bit προς τα πάνω / κάτω 74HC193</h1>
+      <p class="sub">Διάλεξε κατεύθυνση μέτρησης, φόρτωσε έναν αριθμό από τα A–D με LOAD = 0 ή μηδένισε με CLR = 1, και παρακολούθησε τις εξόδους και τα CO / BO.</p>
+    </div>
+    <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
+  </div>
+
+  <div class="main">
+    <div class="card left">
+      <svg id="sch" viewBox="0 0 760 418" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Λογικό σύμβολο του 74HC193 με αριθμούς ακροδεκτών. Αριστερά οι είσοδοι δεδομένων A έως D, LOAD, CLR, UP και DOWN. Δεξιά οι έξοδοι QA έως QD, CO και BO με λάμπες."></svg>
+      <div class="controls">
+        <button id="btnDir" type="button" class="on" style="min-width:12.5em">↑ Μέτρηση προς τα πάνω</button>
+        <label class="chk" for="freq">CLK
+          <input type="range" id="freq" min="0.2" max="2" step="0.1" value="1">
+          <b id="freqVal">1 Hz</b>
+        </label>
+        <button id="btnRun" type="button">⏸ Σταμάτημα</button>
+        <button id="btnStep" type="button" title="Δίνει έναν παλμό ρολογιού (το ρολόι σταματά)">⏭ Ένας παλμός</button>
+      </div>
+      <p class="status" id="status"></p>
+      <p class="status2" id="status2"></p>
+    </div>
+
+    <div class="right">
+      <div class="card">
+        <h2>Μέτρηση</h2>
+        <div class="count" id="count"><span class="lbl">δεκαδικό</span><span class="dec" id="dec">0</span><span class="lbl">QD QC QB QA</span><span class="bin" id="bin">0000</span></div>
+        <table id="ft">
+          <thead><tr><th>CLR</th><th><span class="ov">LOAD</span></th><th>UP</th><th>DOWN</th><th>Λειτουργία</th></tr></thead>
+          <tbody>
+            <tr data-m="clr"><td>1</td><td>×</td><td>×</td><td>×</td><td class="l">Μηδενισμός (ασύγχρονος)</td></tr>
+            <tr data-m="load"><td>0</td><td>0</td><td>×</td><td>×</td><td class="l">Φόρτωση A–D (ασύγχρονη)</td></tr>
+            <tr data-m="up"><td>0</td><td>1</td><td>↑</td><td>1</td><td class="l">Μέτρηση προς τα πάνω</td></tr>
+            <tr data-m="down"><td>0</td><td>1</td><td>1</td><td>↑</td><td class="l">Μέτρηση προς τα κάτω</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card tcard">
+        <div class="legend">
+          <h2 style="margin:0">Χρονοδιάγραμμα <span class="small">(10 s · <span class="dash">- - -</span> ↑ μέτωπο)</span></h2>
+          <div style="display:flex;gap:6px">
+            <button id="btnPause" type="button">⏸ Παύση</button>
+            <button id="btnClear" type="button">Καθαρισμός</button>
+          </div>
+        </div>
+        <canvas id="timing" aria-label="Χρονοδιάγραμμα των UP, DOWN, QA έως QD, CO και BO"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Πώς λειτουργεί</summary>
+    <p>Το <b>74HC193</b> είναι ένας <b>σύγχρονος δυαδικός απαριθμητής 4 bit</b> (0–15) που μετρά <b>προς τα πάνω ή προς τα κάτω</b>. Έχει δύο εισόδους ρολογιού: παλμοί στην <b>UP</b> τον αυξάνουν, παλμοί στην <b>DOWN</b> τον μειώνουν, στο <b>ανερχόμενο μέτωπο</b>. Η είσοδος ρολογιού που δεν χρησιμοποιείται πρέπει να μένει στο 1. Επειδή όλα τα flip-flop αλλάζουν μαζί, δεν εμφανίζονται μεταβατικές τιμές όπως στον ασύγχρονο απαριθμητή.</p>
+    <p>Με <b>CLR = 1</b> ο απαριθμητής μηδενίζεται αμέσως. Με <b><span class="ov">LOAD</span> = 0</b> φορτώνεται αμέσως ο αριθμός που έχουν οι είσοδοι <b>A–D</b> (A είναι το λιγότερο σημαντικό bit). Και τα δύο είναι <b>ασύγχρονα</b>, γίνονται χωρίς να περιμένουν το ρολόι. Ο μηδενισμός έχει προτεραιότητα.</p>
+    <p>Η έξοδος <b><span class="ov">CO</span></b> (κρατούμενο) γίνεται 0 όταν ο απαριθμητής είναι στο <b>15</b> και μετρά προς τα πάνω, και η <b><span class="ov">BO</span></b> (δανεικό) γίνεται 0 όταν είναι στο <b>0</b> και μετρά προς τα κάτω. Με αυτές συνδέουμε δύο ή περισσότερα 74HC193 στη σειρά για μεγαλύτερους απαριθμητές (8 bit κ.λπ.).</p>
+    <p>Δοκίμασε: βάλε A–D = 0101, δώσε στιγμιαία <span class="ov">LOAD</span> = 0 και μετά άφησε τον απαριθμητή να μετρήσει από το 5 προς τα πάνω ή προς τα κάτω.</p>
+  </details>
+</div>
+
+<script>
+(function(){
+  var q = 0;                                    // περιεχόμενο 0–15 (QA = LSB)
+  var d = {A:0, B:0, C:0, D:0};                 // είσοδοι δεδομένων
+  var load = 1, clr = 0, dirUp = true, clk = 0;
+  var pulses = 0, lastMsg = '', dark = false, flashUntil = 0;
+
+  function $(id){ return document.getElementById(id); }
+  function bit(n){ return (q >> n) & 1; }
+  function bits(){ return '' + bit(3) + bit(2) + bit(1) + bit(0); }
+  function binOf(n){ return ('000' + n.toString(2)).slice(-4); }
+  function upLine(){ return dirUp ? clk : 1; }
+  function downLine(){ return dirUp ? 1 : clk; }
+  function co(){ return (q === 15 && upLine() === 0) ? 0 : 1; }
+  function bo(){ return (q === 0 && downLine() === 0) ? 0 : 1; }
+  function dval(){ return d.A + 2 * d.B + 4 * d.C + 8 * d.D; }
+  function mode(){ return clr ? 'clr' : (!load ? 'load' : (dirUp ? 'up' : 'down')); }
+
+  /* ---------- σχεδίαση ---------- */
+  var BXL = 300, BXR = 470;
+  var LY = {A:60, B:95, C:130, D:165, LOAD:220, CLR:260, UP:318, DOWN:362};
+  var RY = {QA:60, QB:95, QC:130, QD:165, CO:318, BO:362};
+  var PIN = {A:15, B:1, C:10, D:9, LOAD:11, CLR:14, UP:5, DOWN:4, QA:3, QB:2, QC:6, QD:7, CO:12, BO:13};
+  function W(pts, v){ return '<polyline class="wire ' + (v ? 'w1' : 'w0') + '" points="' + pts + '"/>'; }
+  function T(x, y, s, size, cls, anchor){ return '<text x="' + x + '" y="' + y + '" font-size="' + size + '" class="' + (cls || 't') + '" text-anchor="' + (anchor || 'middle') + '">' + s + '</text>'; }
+  function ovText(x, y, s, size, cls, anchor){
+    var w = 0.6 * size * s.length, x0 = anchor === 'end' ? x - w : (anchor === 'start' ? x : x - w / 2);
+    return T(x, y, s, size, cls, anchor) + '<line x1="' + x0 + '" y1="' + (y - size * 0.82) + '" x2="' + (x0 + w) + '" y2="' + (y - size * 0.82) + '" class="ink" style="stroke-width:1.4"/>';
+  }
+  function toggle(x, y, v, act, label){
+    return '<g class="tg' + (v ? ' on' : '') + '" data-act="' + act + '" tabindex="0" role="switch" aria-checked="' + (v ? 'true' : 'false') + '" aria-label="' + label + '">' +
+      '<rect x="' + (x - 18) + '" y="' + (y - 14) + '" width="36" height="28" rx="6"/>' + T(x, y + 7, v, 20, v ? 'v1' : 'v0') + '</g>';
+  }
+  function lamp(x, y, lit, v){
+    var s = lit ? '<circle class="halo" cx="' + x + '" cy="' + y + '" r="24"/>' : '';
+    return s + '<circle class="' + (lit ? 'lamp1' : 'lamp0') + '" cx="' + x + '" cy="' + y + '" r="11"/>' + T(x + 18, y + 8, v, 22, v ? 'v1' : 'v0', 'start');
+  }
+  var ACTIVE_LOW = {LOAD: 1, CO: 1, BO: 1};      // ακροδέκτες που ενεργοποιούνται με 0 → κυκλάκι άρνησης
+  function bubble(x, y){ return '<circle cx="' + x + '" cy="' + y + '" r="5.5" class="inkf" style="stroke-width:2.5"/>'; }
+  function pinL(n){
+    var y = LY[n], al = ACTIVE_LOW[n];
+    return '<line x1="' + (BXL - 18) + '" y1="' + y + '" x2="' + (al ? BXL - 11 : BXL) + '" y2="' + y + '" class="ink" style="stroke-width:4"/>' +
+      (al ? bubble(BXL - 5.5, y) : '') + T(BXL - (al ? 14 : 4), y - 7, PIN[n], 11, 'tm', 'end');
+  }
+  function pinR(n){
+    var y = RY[n], al = ACTIVE_LOW[n];
+    return '<line x1="' + (al ? BXR + 11 : BXR) + '" y1="' + y + '" x2="' + (BXR + 18) + '" y2="' + y + '" class="ink" style="stroke-width:4"/>' +
+      (al ? bubble(BXR + 5.5, y) : '') + T(BXR + (al ? 14 : 4), y - 7, PIN[n], 11, 'tm', 'start');
+  }
+
+  function draw(){
+    var s = '<defs><radialGradient id="glow" cx="50%" cy="50%" r="50%">' +
+      '<stop offset="0%" stop-color="#ff5a2a" stop-opacity=".7"/><stop offset="60%" stop-color="#ff5a2a" stop-opacity=".18"/>' +
+      '<stop offset="100%" stop-color="#ff5a2a" stop-opacity="0"/></radialGradient>' +
+      '<g id="gnd"><line x1="-11" y1="0" x2="11" y2="0" stroke="currentColor" stroke-width="2.5"/><line x1="-7" y1="5" x2="7" y2="5" stroke="currentColor" stroke-width="2.5"/><line x1="-3" y1="10" x2="3" y2="10" stroke="currentColor" stroke-width="2.5"/></g></defs>';
+
+    /* ===== αριστερά: είσοδοι δεδομένων ===== */
+    ['A','B','C','D'].forEach(function(k){
+      s += W('248,' + LY[k] + ' ' + (BXL - 18) + ',' + LY[k], d[k]) + toggle(230, LY[k], d[k], 'd' + k, 'Είσοδος δεδομένων ' + k);
+      s += T(200, LY[k] + 5, k, 15, 't', 'end');
+    });
+    s += '<path class="ink" style="stroke-width:1.5" d="M182,' + (LY.A - 10) + ' h-6 v' + (LY.D - LY.A + 20) + ' h6"/>';
+    s += T(168, 108, 'είσοδοι', 12, 'tm', 'end') + T(168, 123, 'δεδομένων', 12, 'tm', 'end') + T(168, 140, '(A = LSB)', 11, 'tm', 'end');
+    /* LOAD και CLR */
+    s += W('248,' + LY.LOAD + ' ' + (BXL - 18) + ',' + LY.LOAD, load) + toggle(230, LY.LOAD, load, 'load', 'LOAD αρνημένο');
+    s += ovText(200, LY.LOAD + 5, 'LOAD', 15, 't', 'end') + T(200, LY.LOAD + 20, 'φόρτωση (ενεργό στο 0)', 11, 'tm', 'end');
+    s += W('248,' + LY.CLR + ' ' + (BXL - 18) + ',' + LY.CLR, clr) + toggle(230, LY.CLR, clr, 'clr', 'CLR');
+    s += T(200, LY.CLR + 5, 'CLR', 15, 't', 'end') + T(200, LY.CLR + 20, 'μηδενισμός (ενεργό στο 1)', 11, 'tm', 'end');
+    /* ρολόι και επιλογή κατεύθυνσης */
+    var cy = (LY.UP + LY.DOWN) / 2;
+    s += '<circle class="inkf" cx="48" cy="' + cy + '" r="17"/><path class="ink" d="M38,' + (cy + 5) + ' h4 v-10 h6 v10 h6 v-10 h4"/>';
+    s += T(48, cy - 24, 'CLK', 13) + W('65,' + cy + ' 120,' + cy, clk);
+    s += '<g class="tg" data-act="dir" tabindex="0" role="button" aria-label="Αλλαγή κατεύθυνσης μέτρησης">' +
+         '<rect x="120" y="' + (LY.UP - 22) + '" width="92" height="' + (LY.DOWN - LY.UP + 44) + '" rx="8"/>' + '</g>';
+    var to = dirUp ? LY.UP : LY.DOWN, other = dirUp ? LY.DOWN : LY.UP;
+    s += '<circle cx="132" cy="' + cy + '" r="4" style="fill:var(--ink)"/>';
+    s += '<line x1="132" y1="' + cy + '" x2="196" y2="' + to + '" class="wire ' + (clk ? 'w1' : 'w0') + '" style="stroke-width:3;pointer-events:none"/>';
+    s += '<circle cx="198" cy="' + LY.UP + '" r="4" class="inkf" style="pointer-events:none"/><circle cx="198" cy="' + LY.DOWN + '" r="4" class="inkf" style="pointer-events:none"/>';
+    s += T(166, cy + 4, '↑ / ↓', 11, 'tm');
+    // η είσοδος που δεν παίρνει ρολόι κρατιέται στο 1 (+5 V)
+    s += T(160, other + (dirUp ? 16 : -8), '+5 V (1)', 10, 'v1');
+    s += W('202,' + LY.UP + ' ' + (BXL - 18) + ',' + LY.UP, upLine()) + W('202,' + LY.DOWN + ' ' + (BXL - 18) + ',' + LY.DOWN, downLine());
+    s += T(250, LY.UP - 7, upLine(), 15, upLine() ? 'v1' : 'v0') + T(250, LY.DOWN - 7, downLine(), 15, downLine() ? 'v1' : 'v0');
+
+    /* ===== ολοκληρωμένο (λογικό σύμβολο) ===== */
+    var fl = performance.now() < flashUntil;
+    s += '<rect class="ic" x="' + BXL + '" y="28" width="' + (BXR - BXL) + '" height="362" rx="6" style="' + (fl ? 'stroke:var(--fl);stroke-width:5' : '') + '"/>';
+    for (var k in LY) s += pinL(k);
+    for (var k2 in RY) s += pinR(k2);
+    ['A','B','C','D'].forEach(function(k){ s += T(BXL + 8, LY[k] + 5, k, 13, 't', 'start'); });
+    s += ovText(BXL + 8, LY.LOAD + 5, 'LOAD', 13, 't', 'start') + T(BXL + 8, LY.CLR + 5, 'CLR', 13, 't', 'start');
+    ['UP','DOWN'].forEach(function(k){
+      s += '<path class="ink" d="M' + BXL + ',' + (LY[k] - 8) + ' L' + (BXL + 11) + ',' + LY[k] + ' L' + BXL + ',' + (LY[k] + 8) + '"/>' + T(BXL + 16, LY[k] + 5, k, 13, 't', 'start');
+    });
+    ['QA','QB','QC','QD'].forEach(function(k){ s += T(BXR - 8, RY[k] + 5, k, 13, 't', 'end'); });
+    s += ovText(BXR - 8, RY.CO + 5, 'CO', 13, 't', 'end') + ovText(BXR - 8, RY.BO + 5, 'BO', 13, 't', 'end');
+    s += T((BXL + BXR) / 2, 196, '74HC193', 18) + T((BXL + BXR) / 2, 214, 'απαριθμητής 4 bit', 11, 'tm') + T((BXL + BXR) / 2, 228, '↑ / ↓ σύγχρονος', 11, 'tm');
+    s += T((BXL + BXR) / 2, 270, q, 34, 'v1');
+
+    /* ===== δεξιά: έξοδοι ===== */
+    ['QA','QB','QC','QD'].forEach(function(k, i){
+      var b = bit(i);
+      s += W((BXR + 18) + ',' + RY[k] + ' 540,' + RY[k], b) + lamp(552, RY[k], b, b) + T(600, RY[k] + 5, k, 14, 't', 'start');
+    });
+    s += T(632, 108, ['QD','QC','QB','QA'].map(function(k, i){ return bit(3 - i); }).join(''), 16, 't', 'start');
+    s += T(632, 130, '= ' + q, 28, 'v1', 'start');
+    var c = co(), b2 = bo();
+    s += W((BXR + 18) + ',' + RY.CO + ' 540,' + RY.CO, c) + lamp(552, RY.CO, !c, c);
+    s += ovText(600, RY.CO + 1, 'CO', 14, 't', 'start') + T(600, RY.CO + 17, 'κρατούμενο', 11, 'tm', 'start');
+    s += W((BXR + 18) + ',' + RY.BO + ' 540,' + RY.BO, b2) + lamp(552, RY.BO, !b2, b2);
+    s += ovText(600, RY.BO + 1, 'BO', 14, 't', 'start') + T(600, RY.BO + 17, 'δανεικό', 11, 'tm', 'start');
+    s += T(540, 396, 'οι λάμπες ανάβουν στο 0 (ενεργά στο 0)', 11, 'tm', 'start');
+    $('sch').innerHTML = s;
+  }
+
+  function render(){
+    draw();
+    $('dec').textContent = q; $('bin').textContent = bits();
+    var m = mode();
+    var rows = document.querySelectorAll('#ft tbody tr');
+    for (var i = 0; i < rows.length; i++) rows[i].className = rows[i].getAttribute('data-m') === m ? 'active' : '';
+    var name = {clr:'Μηδενισμός (CLR = 1)', load:'Φόρτωση από A–D (<span class="ov">LOAD</span> = 0)', up:'Μέτρηση προς τα πάνω', down:'Μέτρηση προς τα κάτω'}[m];
+    $('status').innerHTML = 'Λειτουργία: <b>' + name + '</b> &nbsp;·&nbsp; QD QC QB QA = <span class="mono">' + bits() + '</span> = <b>' + q + '</b>';
+    $('status2').innerHTML = lastMsg || 'Αναμονή για ανερχόμενο μέτωπο στην είσοδο ' + (dirUp ? 'UP' : 'DOWN') + '.';
+    $('btnDir').textContent = dirUp ? '↑ Μέτρηση προς τα πάνω' : '↓ Μέτρηση προς τα κάτω';
+  }
+
+  /* ---------- λειτουργία ---------- */
+  function applyAsync(){
+    if (clr){ q = 0; pulses = 0; }
+    else if (!load){ q = dval(); }
+  }
+  function setClk(v){
+    if (v === clk) return;
+    var coB = co(), boB = bo();
+    clk = v;
+    var edge = clk === 1 && !clr && load;
+    if (edge){
+      var old = q;
+      q = dirUp ? (q + 1) % 16 : (q + 15) % 16;
+      pulses++; flashUntil = performance.now() + 300; setTimeout(draw, 320);
+      lastMsg = '<b>↑ Παλμός ' + pulses + ' στην ' + (dirUp ? 'UP' : 'DOWN') + ':</b> <span class="mono">' + binOf(old) + '</span> (' + old + ') &rarr; <span class="mono">' + bits() + '</span> (<b>' + q + '</b>)' +
+        (dirUp && old === 15 ? ' — μετά το 15 ξαναρχίζει από το 0' : '') + (!dirUp && old === 0 ? ' — μετά το 0 πηγαίνει στο 15' : '');
+    } else if (clk === 1 && (clr || !load)){
+      lastMsg = 'Ο παλμός αγνοείται: ' + (clr ? 'το CLR = 1 κρατά τον απαριθμητή στο 0.' : 'το <span class="ov">LOAD</span> = 0 κρατά τη φόρτωση από A–D.');
+    }
+    if (co() === 0 && coB === 1) lastMsg += ' &nbsp;<b style="color:var(--hi)"><span class="ov">CO</span> = 0</b>: κρατούμενο προς το επόμενο ολοκληρωμένο.';
+    if (bo() === 0 && boB === 1) lastMsg += ' &nbsp;<b style="color:var(--hi)"><span class="ov">BO</span> = 0</b>: δανεικό προς το επόμενο ολοκληρωμένο.';
+    record(edge); render();
+  }
+  function act(a){
+    if (a === 'dir'){ dirUp = !dirUp; lastMsg = dirUp ? 'Το ρολόι οδηγεί πλέον την είσοδο UP (η DOWN μένει στο 1).' : 'Το ρολόι οδηγεί πλέον την είσοδο DOWN (η UP μένει στο 1).'; }
+    else if (a === 'load'){ load = 1 - load; lastMsg = load ? '<span class="ov">LOAD</span> = 1: ο απαριθμητής μετρά ξανά από τον αριθμό που φορτώθηκε.' : '<span class="ov">LOAD</span> = 0: φορτώθηκε αμέσως ο αριθμός A–D = <span class="mono">' + binOf(dval()) + '</span> (' + dval() + ').'; }
+    else if (a === 'clr'){ clr = 1 - clr; lastMsg = clr ? 'CLR = 1: ο απαριθμητής μηδενίστηκε αμέσως.' : 'CLR = 0: ο απαριθμητής μετρά ξανά από το 0.'; }
+    else if (a.charAt(0) === 'd'){ var k = a.charAt(1); d[k] = 1 - d[k]; if (!load && !clr) lastMsg = 'Με <span class="ov">LOAD</span> = 0 οι έξοδοι ακολουθούν αμέσως τα A–D.'; }
+    applyAsync(); record(false); render();
+  }
+  var sch = $('sch');
+  sch.addEventListener('pointerdown', function(e){
+    var g = e.target.closest('[data-act]'); if (!g) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault(); act(g.getAttribute('data-act'));
+  });
+  sch.addEventListener('keydown', function(e){
+    var g = e.target.closest('[data-act]'); if (!g) return;
+    if (e.key === ' ' || e.key === 'Enter'){
+      e.preventDefault(); var a = g.getAttribute('data-act'); act(a);
+      var n = sch.querySelector('[data-act="' + a + '"]'); if (n) n.focus();
+    }
+  });
+  $('btnDir').addEventListener('click', function(){ act('dir'); });
+
+  /* ---------- χρονοδιάγραμμα ---------- */
+  var WINDOW = 10000, events = [], paused = false, pausedAt = 0;
+  var TR = [{n:'UP', f:'u'}, {n:'DOWN', f:'dn'}, {n:'QA', f:'a'}, {n:'QB', f:'b'}, {n:'QC', f:'c'}, {n:'QD', f:'d'}, {n:'CO', f:'co', ov:true}, {n:'BO', f:'bo', ov:true}];
+  function now(){ return performance.now(); }
+  function record(edge){ events.push({t: now(), u: upLine(), dn: downLine(), a: bit(0), b: bit(1), c: bit(2), d: bit(3), co: co(), bo: bo(), edge: !!edge}); }
+  var cv = $('timing'), ctx = cv.getContext('2d');
+  function resize(){
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(cv.clientWidth * dpr); cv.height = Math.round(cv.clientHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(cv); else window.addEventListener('resize', resize);
+  function drawTiming(){
+    var w = cv.clientWidth, h = cv.clientHeight;
+    var tNow = paused ? pausedAt : now(), t0 = tNow - WINDOW;
+    var left = 44, right = 8, top = 6, bottom = 20, pw = w - left - right;
+    var rowH = (h - top - bottom) / TR.length;
+    function X(t){ return left + (t - t0) / WINDOW * pw; }
+    ctx.clearRect(0, 0, w, h);
+    var P = dark ? {grid:'#253246', sep:'#2c3a4f', txt:'#9aa6b8', edge:'#3d9bff', c:'#c58cff', q:'#ff6a3d', o:'#2fc4a8', band:'rgba(255,255,255,0.035)'}
+                 : {grid:'#e6eaf0', sep:'#d5dbe5', txt:'#5b6475', edge:'#1e7bff', c:'#7c3aed', q:'#e8411f', o:'#0f7b6c', band:'rgba(30,60,120,0.045)'};
+    for (var bb = 1; bb < TR.length; bb += 2){ ctx.fillStyle = P.band; ctx.fillRect(left, top + bb * rowH, pw, rowH); }
+    ctx.font = '11px Calibri, "Segoe UI", Arial, sans-serif';
+    ctx.strokeStyle = P.grid; ctx.lineWidth = 1; ctx.fillStyle = P.txt; ctx.textAlign = 'center';
+    for (var s = 0; s <= 10; s++){
+      var x = left + s / 10 * pw;
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, h - bottom); ctx.stroke();
+      if (s % 2 === 0) ctx.fillText((s - 10) + ' s', x, h - 5);
+    }
+    while (events.length > 1 && events[1].t <= t0) events.shift();
+    ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = P.edge; ctx.lineWidth = 1.2;
+    events.forEach(function(e){
+      if (!e.edge || e.t < t0) return;
+      ctx.beginPath(); ctx.moveTo(X(e.t), top); ctx.lineTo(X(e.t), h - bottom); ctx.stroke();
+    });
+    ctx.restore();
+    TR.forEach(function(tr, i){
+      var yHi = top + i * rowH + rowH * 0.28, yLo = top + i * rowH + rowH * 0.78;
+      var col = i < 2 ? P.c : (i < 6 ? P.q : P.o);
+      ctx.fillStyle = col; ctx.textAlign = 'left';
+      ctx.font = 'bold 12px Calibri, "Segoe UI", Arial, sans-serif';
+      ctx.fillText(tr.n, 4, (yHi + yLo) / 2 + 4);
+      if (tr.ov) ctx.fillRect(4, (yHi + yLo) / 2 - 7, ctx.measureText(tr.n).width, 1.4);
+      if (i > 0){ ctx.strokeStyle = P.sep; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(left, top + i * rowH); ctx.lineTo(w - right, top + i * rowH); ctx.stroke(); }
+      if (!events.length) return;
+      ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.lineJoin = 'miter'; ctx.beginPath();
+      var v = events[0][tr.f];
+      ctx.moveTo(X(Math.max(events[0].t, t0)), v ? yHi : yLo);
+      for (var k = 1; k < events.length; k++){
+        var e = events[k]; if (e.t > tNow) break;
+        ctx.lineTo(X(e.t), v ? yHi : yLo); v = e[tr.f]; ctx.lineTo(X(e.t), v ? yHi : yLo);
+      }
+      ctx.lineTo(X(tNow), v ? yHi : yLo); ctx.stroke();
+    });
+    requestAnimationFrame(drawTiming);
+  }
+
+  /* ---------- ρολόι ---------- */
+  var autoClk = null, stepTimer = null;
+  function freq(){ return parseFloat($('freq').value); }
+  function fmtF(f){ return f.toFixed(1).replace('.', ',').replace(',0', '') + ' Hz'; }
+  function startClk(){
+    if (autoClk) clearInterval(autoClk);
+    autoClk = setInterval(function(){ setClk(1 - clk); }, 500 / freq());
+    $('btnRun').textContent = '⏸ Σταμάτημα'; $('btnRun').classList.remove('on');
+  }
+  function stopClk(){
+    if (autoClk){ clearInterval(autoClk); autoClk = null; }
+    $('btnRun').textContent = '▶ Εκκίνηση'; $('btnRun').classList.add('on');
+  }
+  $('btnRun').addEventListener('click', function(){ if (autoClk) stopClk(); else startClk(); });
+  $('freq').addEventListener('input', function(){ $('freqVal').textContent = fmtF(freq()); if (autoClk) startClk(); });
+  $('btnStep').addEventListener('click', function(){
+    stopClk();
+    if (stepTimer) return;
+    if (clk) setClk(0);
+    setClk(1);
+    stepTimer = setTimeout(function(){ stepTimer = null; setClk(0); }, 300);
+  });
+  $('btnPause').addEventListener('click', function(){
+    paused = !paused;
+    if (paused){ pausedAt = now(); this.textContent = '▶ Συνέχεια'; this.classList.add('on'); }
+    else { this.textContent = '⏸ Παύση'; this.classList.remove('on'); }
+  });
+  $('btnClear').addEventListener('click', function(){ events = []; record(false); });
+
+  /* ---------- θέμα ---------- */
+  function setTheme(dk){
+    dark = dk;
+    document.body.classList.toggle('dark', dk);
+    var bt = $('btnTheme');
+    bt.textContent = dk ? '☀️ Φωτεινό θέμα' : '🌙 Σκούρο θέμα';
+    bt.setAttribute('aria-pressed', dk ? 'true' : 'false');
+    try { localStorage.setItem('gateSimTheme', dk ? 'dark' : 'light'); } catch(e){}
+    $('backLink').href = 'index.html' + (dk ? '#dark' : '#light');
+  }
+  try { if (window.self !== window.top) document.body.classList.add('embedded'); }
+  catch(e){ document.body.classList.add('embedded'); }
+  $('btnTheme').addEventListener('click', function(){ setTheme(!dark); });
+  (function(){
+    var hsh = (location.hash || '').toLowerCase(), saved = null;
+    try { saved = localStorage.getItem('gateSimTheme'); } catch(e){}
+    if (hsh === '#dark') setTheme(true); else if (hsh === '#light') setTheme(false); else setTheme(saved === 'dark');
+  })();
+
+  record(false); render(); resize();
+  startClk();
+  requestAnimationFrame(drawTiming);
+})();
+</script>
+</body>
+</html>

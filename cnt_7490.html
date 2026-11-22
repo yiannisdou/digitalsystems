@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Προσομοίωση: Ασύγχρονος απαριθμητής BCD με το 7490, αποκωδικοποιητή 7447 και ενδείκτη 7 τμημάτων</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --ink:#1d2433; --muted:#5b6475;
+    --line:#d5dbe5; --hi:#e8411f; --accent:#0f7b6c; --w0:#8a94a6; --w1:#e8411f; --fl:#1e7bff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:Calibri,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1500px;height:100vh;margin:0 auto;padding:8px 12px;display:flex;flex-direction:column;gap:8px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .back{display:inline-block;color:var(--muted);text-decoration:none;font-size:.85rem}
+  .back:hover{color:var(--ink);text-decoration:underline}
+  body.embedded .back{display:none}
+  h1{font-size:1.3rem;margin:0}
+  h2{font-size:1rem;margin:0 0 4px}
+  .sub{color:var(--muted);margin:2px 0 0;font-size:.92rem;line-height:1.3}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+  .main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px;align-items:stretch}
+  .left{display:flex;flex-direction:column;min-height:0}
+  .left svg{flex:1;min-height:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-select:none}
+  .right{display:flex;flex-direction:column;gap:8px;min-height:0}
+  .tcard{flex:1;display:flex;flex-direction:column;min-height:0}
+  .tcard canvas{flex:1;min-height:120px;width:100%;display:block;border:1px solid var(--line);border-radius:8px;background:#fcfdfe}
+  .controls{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;margin-top:4px}
+  button{font:inherit;font-size:.9rem;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  button:hover{background:#f0f3f8}
+  button.on{background:#e7f4f1;border-color:var(--accent);font-weight:700}
+  .mode{min-width:9.2em}
+  #btnRun{min-width:7.6em} #btnPause{min-width:6.6em}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;color:var(--muted)}
+  .chk input[type=range]{width:100px}
+  #freqVal{color:var(--ink);min-width:3.4em}
+  .sep{width:1px;height:22px;background:var(--line)}
+  .status{text-align:center;font-size:.98rem;margin:4px 0 0;min-height:1.3em}
+  .status2{text-align:center;font-size:.9rem;margin:1px 0 0;color:var(--muted);min-height:1.3em}
+  .status2 b{color:var(--ink)}
+  .mono{font-family:Consolas,"Courier New",monospace;font-weight:700;letter-spacing:1px}
+  .ov{text-decoration:overline}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;text-align:center}
+  th,td{border:1px solid var(--line);padding:3px 5px}
+  th{background:#eef2f7}
+  td.l{text-align:left}
+  tr.active td{background:#fff3c4;font-weight:700}
+  .legend{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px}
+  .legend button{padding:2px 8px;font-size:.85rem}
+  .small{font-size:.82rem;color:var(--muted);font-weight:400}
+  .dash{color:var(--fl);font-weight:700;letter-spacing:-1px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+  summary{cursor:pointer;font-weight:700}
+  details p{color:var(--muted);font-size:.93rem;line-height:1.4;margin:6px 0}
+  details b{color:var(--ink)}
+  @media (max-width:1000px){
+    .wrap{height:auto}
+    .main{grid-template-columns:1fr}
+    .left svg{height:auto;flex:none}
+    .tcard canvas{height:240px;flex:none}
+  }
+
+  /* SVG */
+  .wire{fill:none;stroke-width:3.5;stroke-linejoin:round;stroke-linecap:round}
+  .w0{stroke:var(--w0)} .w1{stroke:var(--w1)}
+  .ic{fill:var(--card);stroke:var(--ink);stroke-width:3.5}
+  .ink{stroke:var(--ink);fill:none;stroke-width:2.5}
+  .inkf{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
+  .cell{fill:var(--card);stroke:var(--ink);stroke-width:2}
+  .cell.fl{stroke:var(--fl);stroke-width:4}
+  .t{fill:var(--ink);font-weight:700}
+  .tm{fill:var(--muted)}
+  .ta{fill:var(--accent);font-weight:700}
+  .v0{fill:var(--w0);font-weight:700} .v1{fill:var(--w1);font-weight:700}
+  .tg{cursor:pointer}
+  .tg rect{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
+  .tg.on rect{fill:#ffe1d6;stroke:var(--w1)}
+  .tg:hover rect{stroke-width:3.5}
+  .tg:focus{outline:none}
+  .tg:focus-visible rect{stroke:var(--accent);stroke-dasharray:4 3}
+  .lamp0{fill:#e9ecf1;stroke:var(--ink);stroke-width:2}
+  .lamp1{fill:#ff4b1f;stroke:var(--ink);stroke-width:2}
+  .halo{fill:url(#glow)}
+
+  /* Σκούρο θέμα */
+  body.dark{--bg:#0d1219;--card:#161e2b;--ink:#e6ebf2;--muted:#9aa6b8;--line:#2c3a4f;--w0:#6b778b;--w1:#ff6a3d;--fl:#3d9bff;--accent:#2fc4a8}
+  body.dark button{background:#202c3f;color:var(--ink)}
+  body.dark button:hover{background:#2a3a55}
+  body.dark button.on{background:#123a33;border-color:#2fc4a8}
+  body.dark th{background:#202c3f}
+  body.dark tr.active td{background:#4a3b10;color:#ffe08a}
+  body.dark .tcard canvas{background:#101824}
+  body.dark .tg.on rect{fill:#4a2a24}
+  body.dark .lamp0{fill:#2a3342}
+</style>
+<style>
+  .count{display:flex;align-items:baseline;gap:14px;justify-content:center;margin:2px 0 6px}
+  .count .dec{font-size:2.3rem;font-weight:700;color:var(--hi);min-width:1.6em;text-align:right;line-height:1}
+  .count .bin{font-family:Consolas,"Courier New",monospace;font-size:1.5rem;font-weight:700;letter-spacing:3px}
+  .count .lbl{font-size:.82rem;color:var(--muted)}
+  .count.ripple .dec{color:var(--fl)}
+  .states{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .states table{font-size:.85rem}
+  .states td,.states th{padding:1px 4px}
+  .states td.b{font-family:Consolas,"Courier New",monospace;letter-spacing:2px}
+  tr.trans td{background:#dbe9ff;font-weight:700}
+  body.dark tr.trans td{background:#1d3557;color:#b9d6ff}
+  .chk2{display:inline-flex;align-items:center;gap:5px;font-size:.9rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <a id="backLink" class="back" href="index.html">← Όλες οι προσομοιώσεις</a>
+      <h1>Ασύγχρονος απαριθμητής BCD με το ολοκληρωμένο 7490</h1>
+      <p class="sub">Το 7490 μετρά 0 έως 9 (QA στο CKB, ρολόι στο CKA), ο 7447 αποκωδικοποιεί τον κώδικα BCD και ο ενδείκτης δείχνει το ψηφίο. Δοκίμασε και τις εισόδους R0 και R9.</p>
+    </div>
+    <button type="button" id="btnTheme" aria-pressed="false">🌙 Σκούρο θέμα</button>
+  </div>
+
+  <div class="main">
+    <div class="card left">
+      <svg id="sch" viewBox="0 0 760 408" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Ολοκληρωμένο 7490 σε περίβλημα DIP-14 με τους ακροδέκτες στις πραγματικές θέσεις. Το QA (12) συνδέεται στο CKB (1), το ρολόι στο CKA (14). Οι έξοδοι QA έως QD συνδέονται στις εισόδους A έως D του αποκωδικοποιητή 7447 και ενδείκτη 7 τμημάτων κοινής ανόδου."></svg>
+      <div class="controls">
+        <label class="chk" for="freq">CLK
+          <input type="range" id="freq" min="0.2" max="2" step="0.1" value="1">
+          <b id="freqVal">1 Hz</b>
+        </label>
+        <button id="btnRun" type="button">⏸ Σταμάτημα</button>
+        <button id="btnStep" type="button" title="Δίνει έναν παλμό ρολογιού (το ρολόι σταματά)">⏭ Ένας παλμός</button>
+        <span class="sep"></span>
+        <label class="chk2"><input type="checkbox" id="slow"> Αργή κίνηση (καθυστέρηση)</label>
+      </div>
+      <p class="status" id="status"></p>
+      <p class="status2" id="status2"></p>
+    </div>
+
+    <div class="right">
+      <div class="card">
+        <h2>Μέτρηση (κώδικας BCD)</h2>
+        <div class="count" id="count"><span class="lbl">δεκαδικό</span><span class="dec" id="dec">0</span><span class="lbl">BCD QD QC QB QA</span><span class="bin" id="bin">0000</span></div>
+        <div class="states">
+          <table><thead><tr><th>Παλμός</th><th>QD QC QB QA</th><th>Δεκ.</th></tr></thead><tbody id="st1"></tbody></table>
+          <table><thead><tr><th>Παλμός</th><th>QD QC QB QA</th><th>Δεκ.</th></tr></thead><tbody id="st2"></tbody></table>
+        </div>
+      </div>
+      <div class="card tcard">
+        <div class="legend">
+          <h2 style="margin:0">Χρονοδιάγραμμα <span class="small">(10 s · <span class="dash">- - -</span> ↓ μέτωπο CLK)</span></h2>
+          <div style="display:flex;gap:6px">
+            <button id="btnPause" type="button">⏸ Παύση</button>
+            <button id="btnClear" type="button">Καθαρισμός</button>
+          </div>
+        </div>
+        <canvas id="timing" aria-label="Χρονοδιάγραμμα του ρολογιού και των εξόδων QA έως QD"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Πώς λειτουργεί</summary>
+    <p>Το <b>7490</b> (74LS90) είναι ένας <b>ασύγχρονος απαριθμητής δεκάδας</b> σε ένα ολοκληρωμένο. Μέσα του έχει δύο μέρη: έναν <b>διαιρέτη με 2</b> (ένα flip-flop, έξοδος <b>QA</b>, ρολόι <b>CKA</b>, ακροδέκτης 14) και έναν <b>διαιρέτη με 5</b> (έξοδοι <b>QB, QC, QD</b>, ρολόι <b>CKB</b>, ακροδέκτης 1). Μετρά στο <b>κατερχόμενο μέτωπο</b>.</p>
+    <p>Για μέτρηση <b>BCD (0–9)</b> συνδέουμε εξωτερικά το <b>QA (12) στο CKB (1)</b> και δίνουμε το ρολόι στο <b>CKA (14)</b>. Το QA αλλάζει σε κάθε παλμό και, κάθε φορά που πέφτει από 1 σε 0, προχωρά κατά ένα ο διαιρέτης με 5. Έτσι οι QD QC QB QA δίνουν 0000 έως 1001 και ξαναρχίζουν από το 0.</p>
+    <p>Οι είσοδοι <b>R0(1), R0(2)</b>: όταν είναι <b>και οι δύο 1</b>, ο απαριθμητής μηδενίζεται. Οι <b>R9(1), R9(2)</b>: όταν είναι και οι δύο 1, πηγαίνει στο <b>9 (1001)</b>. Για κανονική μέτρηση τις συνδέουμε στη γείωση (0).</p>
+    <p>Ο <b>7447</b> μετατρέπει τον κώδικα BCD στα σήματα των τμημάτων. Οι έξοδοί του (a–g) είναι <b>ενεργές στο 0</b>, γι' αυτό χρησιμοποιείται ενδείκτης <b>κοινής ανόδου</b>: ένα τμήμα ανάβει όταν η αντίστοιχη έξοδος είναι 0.</p>
+  </details>
+</div>
+
+<script>
+(function(){
+  var qa = 0, m5 = 0;                  // QA και διαιρέτης με 5 (QB QC QD = m5 σε δυαδικό)
+  var r01 = 0, r02 = 0, r91 = 0, r92 = 0;
+  var clk = 0, pulses = 0, lastMsg = '', dark = false;
+  var rippling = false, gen = 0, startVal = 0, flashPart = '', flashUntil = 0;
+  var PX = [80, 142, 204, 266, 328, 390, 452];
+  var BT = 150, BB = 270;
+
+  function $(id){ return document.getElementById(id); }
+  function QB(){ return m5 & 1; } function QC(){ return (m5 >> 1) & 1; } function QD(){ return (m5 >> 2) & 1; }
+  function val(){ return qa + 2 * m5; }
+  function bits(){ return '' + QD() + QC() + QB() + qa; }
+  function binOf(n){ return ('000' + n.toString(2)).slice(-4); }
+  function tpd(){ return $('slow').checked ? 450 : 25; }
+  function r0(){ return r01 && r02; }
+  function r9(){ return r91 && r92; }
+
+  /* ---------- σχεδίαση ---------- */
+  function W(pts, v){ return '<polyline class="wire ' + (v ? 'w1' : 'w0') + '" points="' + pts + '"/>'; }
+  function T(x, y, s, size, cls, anchor){ return '<text x="' + x + '" y="' + y + '" font-size="' + size + '" class="' + (cls || 't') + '" text-anchor="' + (anchor || 'middle') + '">' + s + '</text>'; }
+  function ovText(x, y, s, size, cls, anchor){
+    var w = 0.6 * size * s.length, x0 = anchor === 'end' ? x - w : (anchor === 'start' ? x : x - w / 2);
+    return T(x, y, s, size, cls, anchor) + '<line x1="' + x0 + '" y1="' + (y - size * 0.82) + '" x2="' + (x0 + w) + '" y2="' + (y - size * 0.82) + '" class="ink" style="stroke-width:1.4"/>';
+  }
+  function toggle(x, y, v, act, label){
+    return '<g class="tg' + (v ? ' on' : '') + '" data-act="' + act + '" tabindex="0" role="switch" aria-checked="' + (v ? 'true' : 'false') + '" aria-label="' + label + '">' +
+      '<rect x="' + (x - 18) + '" y="' + y + '" width="36" height="28" rx="6"/>' + T(x, y + 21, v, 20, v ? 'v1' : 'v0') + '</g>';
+  }
+  function tag(x, y, name, v){        // ετικέτα σύνδεσης (net label) με τιμή
+    return '<path class="inkf" d="M' + (x - 20) + ',' + y + ' h40 v18 h-40 z" style="stroke-width:1.5"/>' + T(x, y + 14, name, 12) +
+           T(x, y - 6, v, 20, v ? 'v1' : 'v0');
+  }
+  var SEG = {0:'abcdef',1:'bc',2:'abdeg',3:'abcdg',4:'bcfg',5:'acdfg',6:'acdefg',7:'abc',8:'abcdefg',9:'abcdfg'};
+
+  function draw(){
+    var s = '<defs><g id="gnd"><line x1="-11" y1="0" x2="11" y2="0" stroke="currentColor" stroke-width="2.5"/><line x1="-7" y1="5" x2="7" y2="5" stroke="currentColor" stroke-width="2.5"/><line x1="-3" y1="10" x2="3" y2="10" stroke="currentColor" stroke-width="2.5"/></g></defs>';
+    var now = performance.now(), v = val();
+    var vals = {QA: qa, QB: QB(), QC: QC(), QD: QD()};
+
+    /* ===== επάνω ακροδέκτες 14 → 8: CKA, NC, QA, QD, GND, QB, QC ===== */
+    // ρολόι → CKA (14)
+    s += W(PX[0] + ',' + 77 + ' ' + PX[0] + ',' + (BT - 20), clk);
+    s += '<circle class="inkf" cx="' + PX[0] + '" cy="60" r="17"/><path class="ink" d="M' + (PX[0] - 10) + ',65 h4 v-10 h6 v10 h6 v-10 h4"/>';
+    s += T(PX[0] - 24, 65, 'CLK', 14, 't', 'end');
+    s += T(PX[1], 122, 'NC', 11, 'tm');
+    // QA (12): ετικέτα και εξωτερική σύνδεση QA → CKB (1)
+    var hy = 92;   // γέφυρα QA → CKB, με «πήδημα» πάνω από τη γραμμή του ρολογιού
+    s += '<path class="wire ' + (qa ? 'w1' : 'w0') + '" d="M' + PX[2] + ',' + hy + ' H' + (PX[0] + 8) + ' a8,8 0 0 0 -16,0 H22 V352 H' + PX[0] + ' V' + (BB + 20) + '"/>';
+    s += '<circle cx="' + PX[2] + '" cy="' + hy + '" r="4.5" style="fill:var(--ink)"/>';
+    s += T(26, 370, 'QA (12) → CKB (1)', 11, 'tm', 'start');
+    s += '<line x1="' + PX[4] + '" y1="' + (BT - 20) + '" x2="' + PX[4] + '" y2="112" class="wire w0"/><use href="#gnd" x="' + PX[4] + '" y="112" transform="rotate(180 ' + PX[4] + ' 112)" style="color:var(--ink)"/>';
+
+    /* ===== κάτω ακροδέκτες 1 → 7: CKB, R0(1), R0(2), NC, VCC, R9(1), R9(2) ===== */
+    s += W(PX[1] + ',' + (BB + 20) + ' ' + PX[1] + ',318', r01) + toggle(PX[1], 318, r01, 'r01', 'R0(1)');
+    s += W(PX[2] + ',' + (BB + 20) + ' ' + PX[2] + ',318', r02) + toggle(PX[2], 318, r02, 'r02', 'R0(2)');
+    s += T(PX[1], 362, 'R0(1)', 12) + T(PX[2], 362, 'R0(2)', 12) + T((PX[1] + PX[2]) / 2, 380, 'μηδενισμός', 11, 'tm') + T((PX[1] + PX[2]) / 2, 394, '(και τα δύο = 1)', 11, 'tm');
+    s += T(PX[3], 306, 'NC', 11, 'tm');
+    s += '<line x1="' + PX[4] + '" y1="' + (BB + 20) + '" x2="' + PX[4] + '" y2="312" class="wire w1"/>' + T(PX[4], 326, '+5 V', 13, 'v1');
+    s += W(PX[5] + ',' + (BB + 20) + ' ' + PX[5] + ',318', r91) + toggle(PX[5], 318, r91, 'r91', 'R9(1)');
+    s += W(PX[6] + ',' + (BB + 20) + ' ' + PX[6] + ',318', r92) + toggle(PX[6], 318, r92, 'r92', 'R9(2)');
+    s += T(PX[5], 362, 'R9(1)', 12) + T(PX[6], 362, 'R9(2)', 12) + T((PX[5] + PX[6]) / 2, 380, 'θέση στο 9', 11, 'tm') + T((PX[5] + PX[6]) / 2, 394, '(και τα δύο = 1)', 11, 'tm');
+
+    /* ===== περίβλημα DIP-14 ===== */
+    for (var i = 0; i < 7; i++){
+      s += '<line x1="' + PX[i] + '" y1="' + (BT - 20) + '" x2="' + PX[i] + '" y2="' + BT + '" class="ink" style="stroke-width:5"/>' + T(PX[i] + 7, BT - 5, 14 - i, 11, 'tm', 'start');
+      s += '<line x1="' + PX[i] + '" y1="' + BB + '" x2="' + PX[i] + '" y2="' + (BB + 20) + '" class="ink" style="stroke-width:5"/>' + T(PX[i] + 7, BB + 15, i + 1, 11, 'tm', 'start');
+    }
+    s += '<rect class="ic" x="50" y="' + BT + '" width="432" height="' + (BB - BT) + '" rx="5"/>';
+    s += '<path class="inkf" d="M50,' + ((BT + BB) / 2 - 12) + ' a12,12 0 0 1 0,24"/>';
+    ['CKA','NC','QA','QD','GND','QB','QC'].forEach(function(n, i){ s += T(PX[i], BT + 20, n, 12); });
+    ['CKB','R0(1)','R0(2)','NC','VCC','R9(1)','R9(2)'].forEach(function(n, i){ s += T(PX[i], BB - 10, n, 12); });
+    s += '<path class="ink" d="M' + (PX[0] - 6) + ',' + BT + ' L' + PX[0] + ',' + (BT + 6) + ' L' + (PX[0] + 6) + ',' + BT + '"/>';
+    s += '<path class="ink" d="M' + (PX[0] - 6) + ',' + BB + ' L' + PX[0] + ',' + (BB - 6) + ' L' + (PX[0] + 6) + ',' + BB + '"/>';
+    // εσωτερικό: διαιρέτης με 2 και διαιρέτης με 5
+    var f2 = (flashPart === '2' && now < flashUntil), f5 = (flashPart === '5' && now < flashUntil);
+    s += '<rect class="cell' + (f2 ? ' fl' : '') + '" x="96" y="182" width="96" height="54" rx="5"/>';
+    s += T(144, 198, '÷ 2', 13, 'tm') + T(144, 228, 'QA ' + qa, 18, qa ? 'v1' : 'v0');
+    s += '<rect class="cell' + (f5 ? ' fl' : '') + '" x="212" y="182" width="168" height="54" rx="5"/>';
+    s += T(296, 198, '÷ 5', 13, 'tm') + T(296, 228, 'QD QC QB  ' + QD() + ' ' + QC() + ' ' + QB(), 16, 't');
+    s += T(470, 216, '7490', 17, 't', 'end');
+
+    /* ===== αποκωδικοποιητής 7447 ===== */
+    var DX = 548, DY = 150;
+    s += '<rect class="ic" x="' + DX + '" y="' + DY + '" width="92" height="150" rx="5"/>';
+    s += T(DX + 46, DY + 72, '7447', 16) + T(DX + 46, DY + 90, 'BCD → 7', 11, 'tm') + T(DX + 46, DY + 103, 'τμήματα', 11, 'tm');
+    /* συνδέσεις QA–QD → A–D του 7447 (με «γεφυράκια» όπου διασταυρώνονται χωρίς σύνδεση) */
+    var IN = {A: DY + 22, B: DY + 54, C: DY + 86, D: DY + 118};
+    function wp(d, b){ return '<path class="wire ' + (b ? 'w1' : 'w0') + '" d="' + d + '"/>'; }
+    s += wp('M' + PX[2] + ',' + (BT - 20) + ' V40 H532 V' + IN.A + ' H' + DX, qa);
+    s += wp('M' + PX[5] + ',' + (BT - 20) + ' V56 H520 V' + IN.B + ' H' + DX, QB());
+    s += wp('M' + PX[6] + ',' + (BT - 20) + ' V72 H508 V' + IN.C + ' H' + DX, QC());
+    s += wp('M' + PX[3] + ',' + (BT - 20) + ' V88 H' + (PX[5] - 8) + ' a8,8 0 0 1 16,0 H' + (PX[6] - 8) + ' a8,8 0 0 1 16,0 H496 V' + IN.D + ' H' + DX, QD());
+    [['QA', PX[2], qa], ['QD', PX[3], QD()], ['QB', PX[5], QB()], ['QC', PX[6], QC()]].forEach(function(o){
+      s += T(o[1] - 6, 126, o[0], 11, 'tm', 'end') + T(o[1] - 6, 113, o[2], 16, o[2] ? 'v1' : 'v0', 'end');
+    });
+    ['A','B','C','D'].forEach(function(n){ s += T(DX + 7, IN[n] + 4, n, 11, 't', 'start'); });
+    // έξοδοι a–g (ενεργές στο 0) → ενδείκτης κοινής ανόδου
+    ['a','b','c','d','e','f','g'].forEach(function(n, k){
+      var y = DY + 12 + k * 21, lit = v < 10 && SEG[v].indexOf(n) >= 0, lvl = lit ? 0 : 1;
+      s += W((DX + 92) + ',' + y + ' 664,' + y, lvl) + ovText(DX + 85, y + 4, n, 10, 'tm', 'end');
+    });
+    s += '<rect x="664" y="140" width="84" height="150" rx="8" style="fill:#1b1f27;stroke:var(--ink);stroke-width:2"/>';
+    var segs = {a:'M688,156 h36 l-6,8 h-24 z', d:'M688,276 h36 l-6,-8 h-24 z', g:'M688,216 l6,-4 h24 l6,4 l-6,4 h-24 z',
+                f:'M684,160 l8,7 v40 l-4,4 l-4,-4 z', b:'M728,160 l-8,7 v40 l4,4 l4,-4 z',
+                e:'M684,272 l8,-7 v-40 l-4,-4 l-4,4 z', c:'M728,272 l-8,-7 v-40 l4,-4 l4,4 z'};
+    Object.keys(segs).forEach(function(n){
+      var lit = v < 10 && SEG[v].indexOf(n) >= 0;
+      s += '<path d="' + segs[n] + '" style="fill:' + (lit ? '#ff4b1f' : '#3a2a27') + '"/>';
+    });
+    s += T(706, 306, 'κοινής ανόδου', 11, 'tm') + T(706, 132, '+5 V (άνοδος)', 11, 'v1');
+    s += T(DX + 46, DY + 168, 'a–g ενεργά στο 0', 11, 'tm');
+    $('sch').innerHTML = s;
+  }
+
+  /* ---------- πίνακας καταστάσεων ---------- */
+  (function(){
+    for (var n = 0; n < 10; n++){
+      var tr = document.createElement('tr'); tr.id = 'row' + n;
+      tr.innerHTML = '<td>' + n + (n === 0 ? ' / 10' : '') + '</td><td class="b">' + binOf(n).split('').join(' ') + '</td><td>' + n + '</td>';
+      $(n < 5 ? 'st1' : 'st2').appendChild(tr);
+    }
+  })();
+
+  function render(){
+    draw();
+    var v = val();
+    $('dec').textContent = v; $('bin').textContent = bits();
+    $('count').classList.toggle('ripple', rippling);
+    for (var n = 0; n < 10; n++) $('row' + n).className = (n === v) ? (rippling ? 'trans' : 'active') : '';
+    var pre = r9() ? '<b style="color:var(--hi)">R9 ενεργό</b> (θέση στο 9): ' : (r0() ? '<b style="color:var(--hi)">R0 ενεργό</b> (μηδενισμός): ' :
+              (rippling ? '<b style="color:var(--fl)">Μεταβατική κατάσταση</b>: ' : 'Μέτρηση: '));
+    $('status').innerHTML = pre + 'QD QC QB QA = <span class="mono">' + bits() + '</span> = <b>' + v + '</b> &nbsp;·&nbsp; CLK = ' + clk;
+    $('status2').innerHTML = lastMsg || 'Αναμονή για κατερχόμενο μέτωπο του ρολογιού (από 1 σε 0).';
+  }
+
+  /* ---------- λειτουργία ---------- */
+  function applyResets(){
+    if (r9()){ gen++; rippling = false; qa = 1; m5 = 4; lastMsg = '<b>R9(1) = R9(2) = 1:</b> ο απαριθμητής πήγε στο 9 (1001). Όσο ισχύει, δεν μετρά.'; }
+    else if (r0()){ gen++; rippling = false; qa = 0; m5 = 0; pulses = 0; lastMsg = '<b>R0(1) = R0(2) = 1:</b> μηδενισμός (0000). Όσο ισχύει, δεν μετρά.'; }
+  }
+  function finish(){
+    rippling = false;
+    lastMsg = '<b>↓ Παλμός ' + pulses + ':</b> <span class="mono">' + binOf(startVal) + '</span> (' + startVal + ') &rarr; <span class="mono">' + bits() + '</span> (<b>' + val() + '</b>)' +
+      (val() === 0 ? ' — ο απαριθμητής ξανάρχισε από το 0' : '');
+    render();
+  }
+  function stepA(g){
+    if (g !== gen) return;
+    var old = qa; qa = 1 - qa;
+    flashPart = '2'; flashUntil = performance.now() + Math.min(400, tpd() * 0.9); setTimeout(draw, Math.min(420, tpd()));
+    record(false);
+    if (old === 1){                       // QA: 1 → 0 = κατερχόμενο μέτωπο στο CKB
+      rippling = true;
+      if ($('slow').checked) lastMsg = 'Το QA έπεσε από 1 σε 0 &rarr; μέσω της σύνδεσης 12→1 φτάνει κατερχόμενο μέτωπο στο CKB…';
+      render();
+      setTimeout(function(){
+        if (g !== gen) return;
+        m5 = (m5 + 1) % 5;
+        flashPart = '5'; flashUntil = performance.now() + Math.min(400, tpd() * 0.9); setTimeout(draw, Math.min(420, tpd()));
+        record(false); finish();
+      }, tpd());
+    } else finish();
+  }
+  function setClk(v){
+    if (v === clk) return;
+    clk = v;
+    var edge = clk === 0 && !r0() && !r9();
+    record(edge);
+    if (edge){
+      pulses++; startVal = val(); rippling = true;
+      var g = gen;
+      setTimeout(function(){ stepA(g); }, tpd());
+    }
+    render();
+  }
+  function act(a){
+    if (a === 'r01') r01 = 1 - r01; else if (a === 'r02') r02 = 1 - r02;
+    else if (a === 'r91') r91 = 1 - r91; else if (a === 'r92') r92 = 1 - r92;
+    if (!r0() && !r9() && /^r/.test(a)) lastMsg = 'Οι είσοδοι R0 / R9 δεν είναι και οι δύο 1 &rarr; ο απαριθμητής μετρά κανονικά.';
+    applyResets(); record(false); render();
+  }
+  var sch = $('sch');
+  sch.addEventListener('pointerdown', function(e){
+    var g = e.target.closest('[data-act]'); if (!g) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault(); act(g.getAttribute('data-act'));
+  });
+  sch.addEventListener('keydown', function(e){
+    var g = e.target.closest('[data-act]'); if (!g) return;
+    if (e.key === ' ' || e.key === 'Enter'){
+      e.preventDefault(); var a = g.getAttribute('data-act'); act(a);
+      var n = sch.querySelector('[data-act="' + a + '"]'); if (n) n.focus();
+    }
+  });
+
+  /* ---------- χρονοδιάγραμμα ---------- */
+  var WINDOW = 10000, events = [], paused = false, pausedAt = 0;
+  var TR = [{n:'CLK', f:'C'}, {n:'QA', f:'a'}, {n:'QB', f:'b'}, {n:'QC', f:'c'}, {n:'QD', f:'d'}];
+  function now(){ return performance.now(); }
+  function record(edge){ events.push({t: now(), C: clk, a: qa, b: QB(), c: QC(), d: QD(), edge: !!edge}); }
+  var cv = $('timing'), ctx = cv.getContext('2d');
+  function resize(){
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(cv.clientWidth * dpr); cv.height = Math.round(cv.clientHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(cv); else window.addEventListener('resize', resize);
+  function drawTiming(){
+    var w = cv.clientWidth, h = cv.clientHeight;
+    var tNow = paused ? pausedAt : now(), t0 = tNow - WINDOW;
+    var left = 40, right = 8, top = 6, bottom = 20, pw = w - left - right;
+    var rowH = (h - top - bottom) / TR.length;
+    function X(t){ return left + (t - t0) / WINDOW * pw; }
+    ctx.clearRect(0, 0, w, h);
+    var P = dark ? {grid:'#253246', sep:'#2c3a4f', txt:'#9aa6b8', edge:'#3d9bff', c:'#c58cff', q:'#ff6a3d', band:'rgba(255,255,255,0.035)'}
+                 : {grid:'#e6eaf0', sep:'#d5dbe5', txt:'#5b6475', edge:'#1e7bff', c:'#7c3aed', q:'#e8411f', band:'rgba(30,60,120,0.045)'};
+    for (var b = 1; b < TR.length; b += 2){ ctx.fillStyle = P.band; ctx.fillRect(left, top + b * rowH, pw, rowH); }
+    ctx.font = '11px Calibri, "Segoe UI", Arial, sans-serif';
+    ctx.strokeStyle = P.grid; ctx.lineWidth = 1; ctx.fillStyle = P.txt; ctx.textAlign = 'center';
+    for (var s = 0; s <= 10; s++){
+      var x = left + s / 10 * pw;
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, h - bottom); ctx.stroke();
+      if (s % 2 === 0) ctx.fillText((s - 10) + ' s', x, h - 5);
+    }
+    while (events.length > 1 && events[1].t <= t0) events.shift();
+    ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = P.edge; ctx.lineWidth = 1.2;
+    events.forEach(function(e){
+      if (!e.edge || e.t < t0) return;
+      ctx.beginPath(); ctx.moveTo(X(e.t), top); ctx.lineTo(X(e.t), h - bottom); ctx.stroke();
+    });
+    ctx.restore();
+    TR.forEach(function(tr, i){
+      var yHi = top + i * rowH + rowH * 0.28, yLo = top + i * rowH + rowH * 0.78;
+      var col = i === 0 ? P.c : (tr.f === 'R' ? (dark ? '#2fc4a8' : '#0f7b6c') : P.q);
+      ctx.fillStyle = col; ctx.textAlign = 'left';
+      ctx.font = 'bold 12px Calibri, "Segoe UI", Arial, sans-serif';
+      ctx.fillText(tr.n, 4, (yHi + yLo) / 2 + 4);
+      if (tr.ov) ctx.fillRect(4, (yHi + yLo) / 2 - 8, ctx.measureText(tr.n).width, 1.5);
+      if (i > 0){ ctx.strokeStyle = P.sep; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(left, top + i * rowH); ctx.lineTo(w - right, top + i * rowH); ctx.stroke(); }
+      if (!events.length) return;
+      ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.lineJoin = 'miter'; ctx.beginPath();
+      var v = events[0][tr.f];
+      ctx.moveTo(X(Math.max(events[0].t, t0)), v ? yHi : yLo);
+      for (var k = 1; k < events.length; k++){
+        var e = events[k]; if (e.t > tNow) break;
+        ctx.lineTo(X(e.t), v ? yHi : yLo); v = e[tr.f]; ctx.lineTo(X(e.t), v ? yHi : yLo);
+      }
+      ctx.lineTo(X(tNow), v ? yHi : yLo); ctx.stroke();
+    });
+    requestAnimationFrame(drawTiming);
+  }
+
+
+  /* ---------- ρολόι ---------- */
+  var autoClk = null, stepTimer = null;
+  function freq(){ return parseFloat($('freq').value); }
+  function fmtF(f){ return f.toFixed(1).replace('.', ',').replace(',0', '') + ' Hz'; }
+  function startClk(){
+    if (autoClk) clearInterval(autoClk);
+    autoClk = setInterval(function(){ setClk(1 - clk); }, 500 / freq());
+    $('btnRun').textContent = '⏸ Σταμάτημα'; $('btnRun').classList.remove('on');
+  }
+  function stopClk(){
+    if (autoClk){ clearInterval(autoClk); autoClk = null; }
+    $('btnRun').textContent = '▶ Εκκίνηση'; $('btnRun').classList.add('on');
+  }
+  $('btnRun').addEventListener('click', function(){ if (autoClk) stopClk(); else startClk(); });
+  $('freq').addEventListener('input', function(){ $('freqVal').textContent = fmtF(freq()); if (autoClk) startClk(); });
+  $('btnStep').addEventListener('click', function(){
+    stopClk();
+    if (stepTimer) return;
+    if (!clk){ setClk(1); }
+    stepTimer = setTimeout(function(){ stepTimer = null; setClk(0); }, 300);
+  });
+  $('slow').addEventListener('change', function(){
+    if (this.checked && freq() > 0.5){ $('freq').value = 0.3; $('freqVal').textContent = fmtF(0.3); if (autoClk) startClk(); }
+  });
+  $('btnPause').addEventListener('click', function(){
+    paused = !paused;
+    if (paused){ pausedAt = now(); this.textContent = '▶ Συνέχεια'; this.classList.add('on'); }
+    else { this.textContent = '⏸ Παύση'; this.classList.remove('on'); }
+  });
+  $('btnClear').addEventListener('click', function(){ events = []; record(false); });
+
+  /* ---------- θέμα ---------- */
+  function setTheme(dk){
+    dark = dk;
+    document.body.classList.toggle('dark', dk);
+    var bt = $('btnTheme');
+    bt.textContent = dk ? '☀️ Φωτεινό θέμα' : '🌙 Σκούρο θέμα';
+    bt.setAttribute('aria-pressed', dk ? 'true' : 'false');
+    try { localStorage.setItem('gateSimTheme', dk ? 'dark' : 'light'); } catch(e){}
+    $('backLink').href = 'index.html' + (dk ? '#dark' : '#light');
+  }
+  try { if (window.self !== window.top) document.body.classList.add('embedded'); }
+  catch(e){ document.body.classList.add('embedded'); }
+  $('btnTheme').addEventListener('click', function(){ setTheme(!dark); });
+  (function(){
+    var hsh = (location.hash || '').toLowerCase(), saved = null;
+    try { saved = localStorage.getItem('gateSimTheme'); } catch(e){}
+    if (hsh === '#dark') setTheme(true); else if (hsh === '#light') setTheme(false); else setTheme(saved === 'dark');
+  })();
+
+  record(false); render(); resize();
+  startClk();
+  requestAnimationFrame(drawTiming);
+})();
+</script>
+</body>
+</html>

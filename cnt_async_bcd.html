@@ -73,6 +73,7 @@
   .t{fill:var(--ink);font-weight:700}
   .tm{fill:var(--muted)}
   .ta{fill:var(--accent);font-weight:700}
+  .tf{fill:var(--fl);font-weight:700}
   .v0{fill:var(--w0);font-weight:700} .v1{fill:var(--w1);font-weight:700}
   .tg{cursor:pointer}
   .tg rect{fill:var(--card);stroke:var(--ink);stroke-width:2.5}
@@ -222,10 +223,11 @@
     var segs = {a:'M612,16 h34 l-5,7 h-24 z', g:'M612,58 l5,-4 h24 l5,4 l-5,4 h-24 z', d:'M612,100 h34 l-5,-7 h-24 z',
                 f:'M608,20 l7,6 v26 l-4,4 l-3,-3 z', b:'M650,20 l-7,6 v26 l4,4 l3,-3 z',
                 e:'M608,96 l7,-6 v-26 l-4,-4 l-3,3 z', c:'M650,96 l-7,-6 v-26 l4,-4 l3,3 z'};
+    var trans = rippling && $('slow').checked;        // μεταβατική τιμή (μόνο στην αργή κίνηση)
     Object.keys(segs).forEach(function(n){
-      s += '<path d="' + segs[n] + '" style="fill:' + (on(n) ? '#ff4b1f' : '#3a2a27') + '"/>';
+      s += '<path d="' + segs[n] + '" style="fill:' + (on(n) ? (trans ? '#4a86d8' : '#ff4b1f') : '#3a2a27') + (trans && on(n) ? ';opacity:.7' : '') + '"/>';
     });
-    s += T(629, 124, v < 10 ? 'ψηφίο ' + v : 'σβηστός', 11, 'tm');
+    s += trans ? T(629, 124, 'μεταβατική τιμή', 11, 'tf') : T(629, 124, v < 10 ? 'ψηφίο ' + v : 'σβηστός', 11, 'tm');
 
     /* ρολόι → FF0 */
     s += W('72,245 ' + (BX[0] - 11) + ',245', clk);
